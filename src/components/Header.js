@@ -25,8 +25,8 @@ export function renderHeader({ title, breadcrumbs = [] }) {
       </div>
 
       <div class="header-right">
-        <div class="event-pill" title="Evento activo">
-          <span>●</span>
+        <div class="event-live-pill" title="Evento activo: Innovathon Mollendo 2026">
+          <span class="event-live-indicator"></span>
           <span>${DEMO_USER.event}</span>
         </div>
         

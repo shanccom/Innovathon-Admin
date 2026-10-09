@@ -25,18 +25,24 @@ export function renderSidebar(currentPath) {
 
   return `
     <aside class="app-sidebar" id="appSidebar">
-      <div class="sidebar-brand">
-        <div class="brand-icon-wrapper">
-          ${icons.logo}
-        </div>
-        <div>
+      <div class="sidebar-brand-container">
+        <img 
+          src="./logo-principal.png" 
+          alt="Innovathon Mollendo Logo" 
+          class="brand-logo-img" 
+          onerror="this.src='./logo-light.png'"
+        />
+        <div class="brand-text-block">
           <div class="brand-title">Innovathon</div>
-          <div class="brand-subtitle">Manager 2026</div>
+          <div class="brand-edition-tag">
+            <span class="brand-edition-dot"></span>
+            <span>Mollendo 2026</span>
+          </div>
         </div>
       </div>
 
       <nav class="sidebar-nav">
-        <div class="nav-section-label">Gestión del Evento</div>
+        <div class="nav-section-label">Gestión Operativa</div>
         ${navItems.map(item => `
           <a href="${item.path}" class="nav-item ${isCurrent(item.path) ? 'active' : ''}">
             ${item.icon}
@@ -46,7 +52,7 @@ export function renderSidebar(currentPath) {
 
         <div class="nav-divider"></div>
 
-        <div class="nav-section-label">Sistema</div>
+        <div class="nav-section-label">Sistema & Conexiones</div>
         <a href="${configItem.path}" class="nav-item ${isCurrent(configItem.path) ? 'active' : ''}">
           ${configItem.icon}
           <span>${configItem.label}</span>
@@ -54,7 +60,7 @@ export function renderSidebar(currentPath) {
       </nav>
 
       <div class="sidebar-footer">
-        <div class="user-badge-demo" title="Elemento visual demostrativo (sin sesión real)">
+        <div class="user-badge-demo" title="Elemento demostrativo - Sin sesión activa real">
           <div class="user-avatar">${DEMO_USER.avatarInitial}</div>
           <div class="user-info">
             <div class="user-name">${DEMO_USER.name}</div>
