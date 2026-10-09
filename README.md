@@ -2,83 +2,79 @@
 
 Panel administrativo frontend para la gestión operativa del evento **Innovathon Mollendo 2026**.
 
-## 🚀 Módulos principales
+## Arquitectura del Proyecto (Clean Architecture)
 
-1. **Panel Principal (Dashboard)**: Métricas globales y accesos directos a los módulos.
-2. **Control de Asistencia** (`#/asistencias`): Registro de participantes y control por sesiones (preparado para conectar con la hoja `Asistencias` y `Registros`).
-3. **Gestión de Certificados** (`#/certificados`): Supervisión de estados del ciclo de certificación (pendiente de generación, pendiente de firma, firmado y entregado; preparado para Google Drive y Google Docs).
-4. **Gestión de Comunicados** (`#/comunicados`): Redacción, filtros de destinatarios y registros de envíos masivos (preparado para Gmail API).
-5. **Configuración** (`#/configuracion`): Gestión de parámetros y variables del evento.
+El proyecto está organizado siguiendo principios de **Clean Architecture**, dividiendo responsabilidades en capas desacopladas y tipadas con **React + TypeScript (.tsx)**:
+
+```
+src/
+├── app/                     # Inicialización de la aplicación y enrutador
+│   └── App.tsx              # HashRouter y definición de rutas
+├── domain/                  # Núcleo de negocio: entidades y contratos
+│   ├── models/              # Modelos (Participant, Attendance, Config, Stats)
+│   └── repositories/        # Interfaces/contratos de repositorios
+├── infrastructure/          # Adaptadores e implementaciones externas
+│   ├── repositories/        # Google Sheets GViz, localStorage, etc.
+│   └── state/               # Estado inicial y datos demostrativos
+├── application/             # Casos de uso y hooks de React
+│   ├── use-cases/           # GetParticipants, ManageAttendance, ManageConfig
+│   └── hooks/               # useParticipants, useAttendance, useConfig
+├── presentation/            # Capa visual (UI components y páginas)
+│   ├── components/          # Layout, Sidebar, Header, Icon, DesktopGate
+│   └── pages/               # Dashboard, Asistencias, Certificados, Comunicados, Configuración
+└── assets/                  # Recursos estáticos centralizados
+    ├── images/              # Logotipos e imágenes consolidadas
+    ├── icons/               # Iconos y favicons en SVG
+    └── styles/              # Design System CSS (style.css)
+```
 
 ---
 
-## 🛠️ Stack Tecnológico
+## Módulos principales
 
-- **Vite & Vanilla JavaScript / ES Modules**: Ligero, ultrarrápido y sin sobrecarga innecesaria.
-- **CSS Tokens & Design System**: Estructura visual sobria con colores institucionales (verde oscuro `#0f3d2e`, acentos esmeralda, fondo cálido, y badges de estado).
-- **Client-Side Hash Routing (`#/`)**: Compatible de forma nativa tanto con **GitHub Pages** como con despliegues en **Google Apps Script HTML Service**.
+1. **Panel Principal (Dashboard)**: Métricas operativas, sincronización en vivo con Google Sheets («Registros») y accesos directos.
+2. **Control de Asistencia** (`#/asistencias`): Registro de participantes, filtro en tiempo real, selector de jornada y conmutador de asistencia persistido.
+3. **Gestión de Certificados** (`#/certificados`): Supervisión de estados del ciclo de certificación (pendiente de generación, firma digital, firmado y entregado).
+4. **Gestión de Comunicados** (`#/comunicados`): Redacción, filtros de destinatarios y registros de envíos masivos.
+5. **Configuración** (`#/configuracion`): Conexión con hoja de cálculo de Google Sheets, probador de conexión en vivo y guía para Google Apps Script.
 
 ---
 
-## 💻 Ejecución en Desarrollo Local
+## Stack Tecnológico
 
-1. Instalar dependencias:
+- **React 19 & TypeScript (.tsx)**: Tipado estricto, componentes funcionales y hooks reactivos.
+- **Vite 8**: Servidor de desarrollo instantáneo y empaquetador ultrarrápido.
+- **React Router (HashRouter `#/`)**: Enrutamiento client-side 100% compatible con **GitHub Pages** sin problemas de recarga 404.
+- **Clean Architecture**: Separación estricta entre Dominio, Infraestructura, Aplicación y Presentación.
+- **Vitest**: Suite de pruebas unitarias automatizadas.
+
+---
+
+## Comandos Disponibles
+
+1. **Instalar dependencias:**
    ```bash
    npm install
    ```
-2. Iniciar el servidor local de desarrollo:
+2. **Ejecutar servidor local:**
    ```bash
    npm run dev
    ```
-3. Abrir la URL mostrada en terminal (usualmente `http://localhost:5173/`).
+3. **Ejecutar pruebas unitarias:**
+   ```bash
+   npm test
+   ```
+4. **Compilar para producción (TypeScript check + Vite):**
+   ```bash
+   npm run build
+   ```
+5. **Previsualizar compilación:**
+   ```bash
+   npm run preview
+   ```
 
 ---
 
-## 📦 Compilación para Producción
+## Despliegue en GitHub Pages
 
-Para compilar los recursos estáticos optimizados:
-
-```bash
-npm run build
-```
-
-Los archivos generados se ubicarán en la carpeta `dist/`. Puedes previsualizarlos localmente con:
-
-```bash
-npm run preview
-```
-
----
-
-## 🌐 Despliegue en GitHub Pages
-
-Este repositorio incluye un flujo automatizado de CI/CD con **GitHub Actions** en `.github/workflows/deploy.yml`. 
-
-Cada vez que se realiza un push a la rama `main`, la acción compila el frontend y lo despliega automáticamente a GitHub Pages.
-
-Para habilitarlo en el repositorio de GitHub:
-1. Dirígete a **Settings > Pages** en tu repositorio de GitHub.
-2. En **Build and deployment > Source**, selecciona **GitHub Actions**.
-
----
-
-## 📊 Integración con Google Sheets (Hoja «Registros»)
-
-El panel cuenta con un servicio reactivo (`src/services/participantsService.js`) conectado a la hoja oficial de Innovathon Mollendo 2026:
-- **ID Hoja de Cálculo**: `1U48ftJJns3-4waJrt4A4uaI4OBNQoeyg1sOzzvXllI8`
-- **Pestaña sincronizada**: `Registros`
-
-### Modos de Conexión admitidos:
-1. **Lectura directa vía Google Visualization API (GViz)**:
-   - Requiere compartir la hoja en Google Drive como **"Cualquier persona con el enlace (Lector)"**.
-2. **Conector Google Apps Script Web App**:
-   - Implementa un Web App en `Extensiones > Apps Script` para leer los registros sin hacer la hoja pública y permitiendo el guardado de asistencias.
-   - Configurable directamente desde la pestaña **Configuración** (`#/configuracion`).
-
----
-
-## 📋 Estado del Proyecto
-
-- **Fase 1 (Completada)**: Estructura visual, layout administrativo, navegación reactiva con hash routing, diseño responsive.
-- **Fase 2 (En curso / Implementada)**: Conexión dinámica con Google Sheets para la hoja `Registros`, métricas en vivo en Dashboard, buscador de participantes en tiempo real y registro de asistencias por sesión en `#/asistencias`.
-- **Fase 3 (Próxima)**: Automatización de certificados vía Google Drive / Docs y envíos masivos por correo vía Gmail.
+El proyecto incluye el flujo automatizado `.github/workflows/deploy.yml` que compila (`npm run build`) y despliega la carpeta `dist/` a GitHub Pages en cada push a la rama `main`.
