@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AttendanceRecord, AttendanceStatus } from '../../domain/models/attendance.model';
 import { manageAttendanceUseCase } from '../use-cases/manage-attendance.use-case';
 
@@ -6,6 +6,10 @@ export function useAttendance(sessionId: string) {
   const [records, setRecords] = useState<Record<string, AttendanceRecord>>(() => {
     return manageAttendanceUseCase.getBySession(sessionId);
   });
+
+  useEffect(() => {
+    setRecords(manageAttendanceUseCase.getBySession(sessionId));
+  }, [sessionId]);
 
   const reloadRecords = useCallback((newSessionId?: string) => {
     const sId = newSessionId || sessionId;

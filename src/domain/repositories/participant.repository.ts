@@ -4,4 +4,5 @@ export interface ParticipantRepository {
   fetchParticipants(forceRefresh?: boolean): Promise<ParticipantFetchResult>;
   getCachedParticipants(): Participant[] | null;
   getLastStatus(): SyncStatus;
+  clearCache(): void;
 }

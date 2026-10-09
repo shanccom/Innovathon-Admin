@@ -16,6 +16,10 @@ export class GetParticipantsUseCase {
   getLastStatus() {
     return this.repo.getLastStatus();
   }
+
+  clearCache(): void {
+    this.repo.clearCache();
+  }
 }
 
 export const getParticipantsUseCase = new GetParticipantsUseCase();

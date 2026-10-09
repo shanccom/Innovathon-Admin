@@ -11,7 +11,7 @@ export const AttendancePage: React.FC = () => {
 
   const { participants, loading, status, refresh } = useParticipants();
   const { records, toggleAttendance } = useAttendance(session);
-  const { getSpreadsheetUrl } = useConfig();
+  const { config, getSpreadsheetUrl } = useConfig();
 
   useEffect(() => {
     document.title = 'Control de Asistencias - Innovathon Manager';
@@ -36,7 +36,7 @@ export const AttendancePage: React.FC = () => {
   const totalCount = participants.length;
   const pendingCount = Math.max(0, totalCount - presentCount);
 
-  const isConnected = status.state === 'connected' && participants.length > 0;
+  const isConnected = status.state === 'connected';
   const hasError = status.state === 'error' && participants.length === 0;
 
   return (
@@ -142,7 +142,7 @@ export const AttendancePage: React.FC = () => {
 
       {/* Área de tabla y Estado */}
       <div className="content-box">
-        {loading && participants.length === 0 ? (
+        {loading && participants.length === 0 && !isConnected ? (
           <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
             Cargando participantes desde Google Sheets...
           </div>
@@ -178,6 +178,16 @@ export const AttendancePage: React.FC = () => {
                 <span>Abrir Google Sheets</span>
               </a>
             </div>
+          </div>
+        ) : participants.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon-box">
+              <Icon name="users" />
+            </div>
+            <h3 className="empty-title">Sin participantes registrados</h3>
+            <p className="empty-desc">
+              La hoja «{config.sheetName}» está conectada correctamente, pero aún no contiene registros de participantes.
+            </p>
           </div>
         ) : filteredParticipants.length === 0 ? (
           <div className="empty-state">

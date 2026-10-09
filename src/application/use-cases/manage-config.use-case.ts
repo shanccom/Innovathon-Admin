@@ -1,6 +1,7 @@
 import { SheetsConfig } from '../../domain/models/config.model';
 import { ConfigRepository } from '../../domain/repositories/config.repository';
 import { configRepository } from '../../infrastructure/repositories/local-storage-config.repository';
+import { participantRepository } from '../../infrastructure/repositories/google-sheets-participant.repository';
 
 export class ManageConfigUseCase {
   constructor(private repo: ConfigRepository = configRepository) {}
@@ -10,7 +11,9 @@ export class ManageConfigUseCase {
   }
 
   save(config: Partial<SheetsConfig>): SheetsConfig {
-    return this.repo.saveConfig(config);
+    const updated = this.repo.saveConfig(config);
+    participantRepository.clearCache();
+    return updated;
   }
 
   getUrl(): string {

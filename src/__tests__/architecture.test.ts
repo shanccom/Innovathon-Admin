@@ -87,6 +87,34 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
       expect(result[0].celular).toBe('—');
       expect(result[0].rol).toBe('Participante');
     });
+
+    it('should distinguish real participant rows from stray cells', () => {
+      // Row with only an unrelated number in a random column
+      const strayRow = { 'Nivel académico': 12 };
+      expect(repo.isParticipantRow(strayRow)).toBe(false);
+
+      // Row with DNI
+      const dniRow = { 'DNI': '12345678' };
+      expect(repo.isParticipantRow(dniRow)).toBe(true);
+
+      // Row with Nombre
+      const nameRow = { 'Nombres y apellidos': 'María Flores' };
+      expect(repo.isParticipantRow(nameRow)).toBe(true);
+
+      // Row with Correo
+      const emailRow = { 'Correo personal': 'maria@gmail.com' };
+      expect(repo.isParticipantRow(emailRow)).toBe(true);
+    });
+
+    it('should prioritize specific team terms over generic terms', () => {
+      const row = {
+        'Nombres': 'Pedro Gómez',
+        'Reto': 'Turismo',
+        'Equipo': 'Los Innovadores',
+      };
+      const result = repo.normalizeRows([row]);
+      expect(result[0].equipo).toBe('Los Innovadores');
+    });
   });
 
   describe('Attendance Repository & Use Case', () => {
@@ -108,6 +136,20 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
       const secondStatus = useCase.toggle('s1', 'p-1', 'present');
       expect(secondStatus).toBe('absent');
       expect(useCase.getBySession('s1')['p-1'].status).toBe('absent');
+    });
+
+    it('should maintain independent records across different sessions', () => {
+      const repo = new LocalStorageAttendanceRepository();
+      const useCase = new ManageAttendanceUseCase(repo);
+
+      useCase.toggle('s1', 'p-1');
+      useCase.toggle('s2', 'p-2');
+
+      expect(useCase.getBySession('s1')['p-1']?.status).toBe('present');
+      expect(useCase.getBySession('s1')['p-2']).toBeUndefined();
+
+      expect(useCase.getBySession('s2')['p-2']?.status).toBe('present');
+      expect(useCase.getBySession('s2')['p-1']).toBeUndefined();
     });
   });
 

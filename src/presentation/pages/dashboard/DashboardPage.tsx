@@ -13,7 +13,7 @@ export const DashboardPage: React.FC = () => {
     document.title = 'Panel principal - Innovathon Manager';
   }, []);
 
-  const isParticipantsConnected = status.state === 'connected' && participants.length > 0;
+  const isParticipantsConnected = status.state === 'connected';
   const isPermissionDenied = status.errorType === 'PERMISSION_DENIED';
 
   return (
@@ -65,7 +65,7 @@ export const DashboardPage: React.FC = () => {
 
               <div className="stat-card-value" id={`val-${stat.id}`}>
                 {isParticipants ? (
-                  loading && participants.length === 0 ? (
+                  loading && participants.length === 0 && !isParticipantsConnected ? (
                     <span style={{ fontSize: '1.25rem', opacity: 0.6 }}>Cargando...</span>
                   ) : isParticipantsConnected ? (
                     participants.length
@@ -144,7 +144,7 @@ export const DashboardPage: React.FC = () => {
           <h2 className="section-title">Actividad y sincronización</h2>
         </div>
         <div className="content-box" id="dashboard-activity-container">
-          {loading && participants.length === 0 ? (
+          {loading && participants.length === 0 && !isParticipantsConnected ? (
             <div className="empty-state">
               <div className="empty-icon-box">
                 <Icon name="refresh" className="spinning" />
@@ -155,60 +155,72 @@ export const DashboardPage: React.FC = () => {
               </p>
             </div>
           ) : isParticipantsConnected ? (
-            <>
-              <div
-                style={{
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <h3
+            participants.length > 0 ? (
+              <>
+                <div
                   style={{
-                    fontSize: '1rem',
-                    fontWeight: 700,
-                    margin: 0,
-                    color: 'var(--color-midnight)',
+                    marginBottom: '1rem',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
                   }}
                 >
-                  Últimos participantes registrados ({participants.length} en total)
-                </h3>
-                <Link to="/asistencias" className="btn btn-secondary btn-sm">
-                  Ver todos en Asistencias
-                </Link>
-              </div>
-              <div className="table-container">
-                <table className="table-mock">
-                  <thead>
-                    <tr>
-                      <th>DNI / Doc</th>
-                      <th>Participante</th>
-                      <th>Equipo / Proyecto</th>
-                      <th>Rol</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {participants.slice(0, 5).map((p) => (
-                      <tr key={p.id}>
-                        <td>
-                          <code>{p.dni}</code>
-                        </td>
-                        <td>
-                          <strong>{p.nombre}</strong>
-                        </td>
-                        <td>{p.equipo}</td>
-                        <td>{p.rol}</td>
-                        <td>
-                          <span className="badge-live">Registrado</span>
-                        </td>
+                  <h3
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      margin: 0,
+                      color: 'var(--color-midnight)',
+                    }}
+                  >
+                    Últimos participantes registrados ({participants.length} en total)
+                  </h3>
+                  <Link to="/asistencias" className="btn btn-secondary btn-sm">
+                    Ver todos en Asistencias
+                  </Link>
+                </div>
+                <div className="table-container">
+                  <table className="table-mock">
+                    <thead>
+                      <tr>
+                        <th>DNI / Doc</th>
+                        <th>Participante</th>
+                        <th>Equipo / Proyecto</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {participants.slice(0, 5).map((p) => (
+                        <tr key={p.id}>
+                          <td>
+                            <code>{p.dni}</code>
+                          </td>
+                          <td>
+                            <strong>{p.nombre}</strong>
+                          </td>
+                          <td>{p.equipo}</td>
+                          <td>{p.rol}</td>
+                          <td>
+                            <span className="badge-live">Registrado</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <div className="empty-state">
+                <div className="empty-icon-box">
+                  <Icon name="database" />
+                </div>
+                <h3 className="empty-title">Hoja «{config.sheetName}» conectada</h3>
+                <p className="empty-desc">
+                  La hoja fue leída con éxito pero aún no contiene registros de participantes.
+                </p>
               </div>
-            </>
+            )
           ) : status.state === 'error' || error ? (
             <div className="alert-box alert-warning">
               <Icon name="alertCircle" />

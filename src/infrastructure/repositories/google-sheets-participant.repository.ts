@@ -41,10 +41,45 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
     timestamp: null,
   };
 
+  clearCache(): void {
+    this.cachedData = null;
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(CACHE_KEY);
+      }
+    } catch {
+      // Ignore quota/access errors
+    }
+  }
+
+  isParticipantRow(row: Record<string, unknown>): boolean {
+    const keys = Object.keys(row);
+    const findKey = (...terms: string[]) => {
+      for (const term of terms) {
+        const match = keys.find(k => {
+          const lower = k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return lower.includes(term);
+        });
+        if (match) return match;
+      }
+      return undefined;
+    };
+
+    const dniKey = findKey('dni', 'documento', 'identificacion', 'cedula');
+    const nameKey = findKey('nombre', 'participante');
+    const correoKey = findKey('correo', 'email', 'mail');
+
+    const hasVal = (k?: string) =>
+      Boolean(k && row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '');
+    return hasVal(dniKey) || hasVal(nameKey) || hasVal(correoKey);
+  }
+
   async fetchParticipants(forceRefresh = false): Promise<ParticipantFetchResult> {
     const config = configRepository.getConfig();
 
-    if (!forceRefresh && this.cachedData) {
+    if (forceRefresh) {
+      this.clearCache();
+    } else if (this.cachedData) {
       return {
         success: true,
         data: this.cachedData,
@@ -94,7 +129,8 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
           const rows: Record<string, unknown>[] = Array.isArray(json)
             ? json
             : json.data || json.rows || [];
-          const normalized = this.normalizeRows(rows);
+          const validRows = rows.filter(r => this.isParticipantRow(r));
+          const normalized = this.normalizeRows(validRows);
           this.cachedData = normalized;
           this.lastStatus = {
             state: 'connected',
@@ -132,6 +168,7 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
         rawText.includes('accounts.google.com') ||
         rawText.includes('<html')
       ) {
+        this.clearCache();
         this.lastStatus = {
           state: 'error',
           errorType: 'PERMISSION_DENIED',
@@ -189,11 +226,12 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
         }
       });
 
-      const normalized = this.normalizeRows(rows);
+      const validRows = rows.filter(r => this.isParticipantRow(r));
+      const normalized = this.normalizeRows(validRows);
       this.cachedData = normalized;
       this.lastStatus = {
         state: 'connected',
-        message: `Sincronizado con hoja «${config.sheetName}»`,
+        message: `Sincronizado con hoja «${config.sheetName}» (${normalized.length} participantes)`,
         count: normalized.length,
         timestamp: Date.now(),
       };
@@ -206,6 +244,7 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
         status: this.lastStatus,
       };
     } catch (error: unknown) {
+      this.clearCache();
       const errMessage = error instanceof Error ? error.message : 'Error al conectar con la hoja de Google Sheets';
       this.lastStatus = {
         state: 'error',
@@ -227,10 +266,14 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
     return rows.map((row, idx) => {
       const keys = Object.keys(row);
       const findKey = (...terms: string[]) => {
-        return keys.find(k => {
-          const lower = k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          return terms.some(t => lower.includes(t));
-        });
+        for (const term of terms) {
+          const match = keys.find(k => {
+            const lower = k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            return lower.includes(term);
+          });
+          if (match) return match;
+        }
+        return undefined;
       };
 
       const dniKey = findKey('dni', 'documento', 'identificacion', 'cedula');
@@ -244,7 +287,7 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
       const nombresKey = findKey('nombres', 'nombre');
       const apellidosKey = findKey('apellidos', 'apellido');
 
-      const equipoKey = findKey('equipo', 'proyecto', 'team', 'grupo');
+      const equipoKey = findKey('equipo', 'proyecto', 'team', 'grupo', 'reto', 'eje', 'institucion');
       const correoKey = findKey('correo', 'email', 'mail');
       const celularKey = findKey('celular', 'telefono', 'whatsapp', 'movil');
       const rolKey = findKey('rol', 'categoria', 'tipo', 'modalidad');
