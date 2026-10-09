@@ -28,14 +28,14 @@ export function renderSidebar(currentPath) {
       <div class="sidebar-glow-orb sidebar-glow-purple"></div>
       <div class="sidebar-glow-orb sidebar-glow-lime"></div>
 
-      <!-- Cabecera de marca con logo oficial -->
+      <!-- Cabecera de marca con logo oficial de la navbar -->
       <div class="sidebar-brand-container">
-        <a href="#/" class="sidebar-brand-link">
+        <a href="#/" class="sidebar-brand-link" title="Innovathon Manager 2026">
           <img 
-            src="./logo-principal.png" 
-            alt="Innovathon Mollendo Logo" 
+            src="./brand-logo-transparent.png" 
+            alt="Innovathon Mollendo" 
             class="brand-logo-img" 
-            onerror="this.src='./logo-light.png'"
+            onerror="this.src='./logo-principal.png'"
           />
         </a>
       </div>
