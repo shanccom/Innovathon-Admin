@@ -97,14 +97,6 @@ export function initRouter(appElement) {
         });
       });
     }
-
-    // Notifications demo button
-    const notificationsBtn = document.getElementById('notificationsBtn');
-    if (notificationsBtn) {
-      notificationsBtn.addEventListener('click', () => {
-        alert('Notificaciones: En esta fase inicial no hay alertas activas.');
-      });
-    }
   }
 
   window.addEventListener('hashchange', handleRoute);

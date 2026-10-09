@@ -29,11 +29,6 @@ export function renderHeader({ title, breadcrumbs = [] }) {
           <span class="event-live-indicator"></span>
           <span>${DEMO_USER.event}</span>
         </div>
-        
-        <button class="header-icon-btn" title="Notificaciones del sistema" id="notificationsBtn">
-          ${icons.bell}
-          <span class="notification-dot"></span>
-        </button>
 
         <div class="demo-account-chip" title="Sesión de demostración">
           <span class="account-dot"></span>
