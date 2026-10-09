@@ -65,13 +65,14 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
       return undefined;
     };
 
+    const codigoKey = findKey('codigo', 'code', 'ticket', 'identificador');
     const dniKey = findKey('dni', 'documento', 'identificacion', 'cedula');
     const nameKey = findKey('nombre', 'participante');
     const correoKey = findKey('correo', 'email', 'mail');
 
     const hasVal = (k?: string) =>
       Boolean(k && row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '');
-    return hasVal(dniKey) || hasVal(nameKey) || hasVal(correoKey);
+    return hasVal(codigoKey) || hasVal(dniKey) || hasVal(nameKey) || hasVal(correoKey);
   }
 
   async fetchParticipants(forceRefresh = false): Promise<ParticipantFetchResult> {
@@ -276,6 +277,7 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
         return undefined;
       };
 
+      const codigoKey = findKey('codigo', 'code', 'ticket', 'identificador');
       const dniKey = findKey('dni', 'documento', 'identificacion', 'cedula');
       const fullCombinedKey = findKey(
         'nombres y apellidos',
@@ -309,6 +311,7 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
 
       return {
         id: `p-${idx + 1}`,
+        codigo: codigoKey && row[codigoKey] ? String(row[codigoKey]).trim() : `P-${idx + 1}`,
         raw: row,
         dni: dniKey && row[dniKey] ? String(row[dniKey]).trim() : '—',
         nombre: nombre.trim(),

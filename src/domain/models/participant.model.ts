@@ -1,5 +1,6 @@
 export interface Participant {
   id: string;
+  codigo: string;
   raw: Record<string, unknown>;
   dni: string;
   nombre: string;

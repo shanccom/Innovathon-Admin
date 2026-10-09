@@ -5,4 +5,10 @@ export interface AttendanceRecord {
   timestamp: string;
 }
 
+export interface AttendanceSession {
+  id: string;
+  name: string;
+  createdAt: number;
+}
+
 export type AttendanceSessionMap = Record<string, Record<string, AttendanceRecord>>;

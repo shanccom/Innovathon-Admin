@@ -34,9 +34,10 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
   describe('GoogleSheetsParticipantRepository Normalization', () => {
     const repo = new GoogleSheetsParticipantRepository();
 
-    it('should normalize row with combined "Nombres y Apellidos"', () => {
+    it('should normalize row with Código and combined "Nombres y Apellidos"', () => {
       const rows = [
         {
+          'Código': 'IM26-042',
           'DNI': '72819203',
           'Nombres y Apellidos': 'Carlos Benavides',
           'Equipo': 'Team Alpha',
@@ -50,6 +51,7 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toMatchObject({
         id: 'p-1',
+        codigo: 'IM26-042',
         dni: '72819203',
         nombre: 'Carlos Benavides',
         equipo: 'Team Alpha',
@@ -63,6 +65,7 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
     it('should combine separate "Nombres" and "Apellidos"', () => {
       const rows = [
         {
+          'Código': 'INN-100',
           'Documento': '12345678',
           'Nombre': 'Ana',
           'Apellido': 'López',
@@ -72,6 +75,7 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
 
       const result = repo.normalizeRows(rows);
       expect(result).toHaveLength(1);
+      expect(result[0].codigo).toBe('INN-100');
       expect(result[0].nombre).toBe('Ana López');
       expect(result[0].equipo).toBe('EcoCode');
       expect(result[0].dni).toBe('12345678');
@@ -80,6 +84,7 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
     it('should fallback to defaults when columns are missing', () => {
       const rows = [{}];
       const result = repo.normalizeRows(rows);
+      expect(result[0].codigo).toBe('P-1');
       expect(result[0].nombre).toBe('Participante #1');
       expect(result[0].dni).toBe('—');
       expect(result[0].equipo).toBe('Sin equipo asignado');
@@ -92,6 +97,10 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
       // Row with only an unrelated number in a random column
       const strayRow = { 'Nivel académico': 12 };
       expect(repo.isParticipantRow(strayRow)).toBe(false);
+
+      // Row with Código
+      const codeRow = { 'Código': 'IM-001' };
+      expect(repo.isParticipantRow(codeRow)).toBe(true);
 
       // Row with DNI
       const dniRow = { 'DNI': '12345678' };
@@ -117,39 +126,70 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
     });
   });
 
-  describe('Attendance Repository & Use Case', () => {
+  describe('Attendance Repository & Dynamic Sessions Use Case', () => {
+    it('should provide default 3 sessions and allow adding/deleting sessions', () => {
+      const repo = new LocalStorageAttendanceRepository();
+      const useCase = new ManageAttendanceUseCase(repo);
+
+      const sessions = useCase.getSessions();
+      expect(sessions).toHaveLength(3);
+      expect(sessions.map(s => s.name)).toEqual(['Asistencia 1', 'Asistencia 2', 'Asistencia 3']);
+
+      // Add 4th session
+      const newSession = useCase.addSession();
+      expect(newSession.name).toBe('Asistencia 4');
+      expect(useCase.getSessions()).toHaveLength(4);
+
+      // Delete session
+      const deleted = useCase.deleteSession(newSession.id);
+      expect(deleted).toBe(true);
+      expect(useCase.getSessions()).toHaveLength(3);
+    });
+
     it('should toggle attendance correctly and persist in storage', () => {
       const repo = new LocalStorageAttendanceRepository();
       const useCase = new ManageAttendanceUseCase(repo);
 
-      expect(useCase.getBySession('s1')).toEqual({});
+      expect(useCase.getBySession('asistencia-1')).toEqual({});
 
       // Toggle to present
-      const firstStatus = useCase.toggle('s1', 'p-1');
+      const firstStatus = useCase.toggle('asistencia-1', 'p-1');
       expect(firstStatus).toBe('present');
 
-      const s1Records = useCase.getBySession('s1');
+      const s1Records = useCase.getBySession('asistencia-1');
       expect(s1Records['p-1'].status).toBe('present');
       expect(s1Records['p-1'].timestamp).toBeDefined();
 
       // Toggle back to absent
-      const secondStatus = useCase.toggle('s1', 'p-1', 'present');
+      const secondStatus = useCase.toggle('asistencia-1', 'p-1', 'present');
       expect(secondStatus).toBe('absent');
-      expect(useCase.getBySession('s1')['p-1'].status).toBe('absent');
+      expect(useCase.getBySession('asistencia-1')['p-1'].status).toBe('absent');
     });
 
     it('should maintain independent records across different sessions', () => {
       const repo = new LocalStorageAttendanceRepository();
       const useCase = new ManageAttendanceUseCase(repo);
 
-      useCase.toggle('s1', 'p-1');
-      useCase.toggle('s2', 'p-2');
+      useCase.toggle('asistencia-1', 'p-1');
+      useCase.toggle('asistencia-2', 'p-2');
 
-      expect(useCase.getBySession('s1')['p-1']?.status).toBe('present');
-      expect(useCase.getBySession('s1')['p-2']).toBeUndefined();
+      expect(useCase.getBySession('asistencia-1')['p-1']?.status).toBe('present');
+      expect(useCase.getBySession('asistencia-1')['p-2']).toBeUndefined();
 
-      expect(useCase.getBySession('s2')['p-2']?.status).toBe('present');
-      expect(useCase.getBySession('s2')['p-1']).toBeUndefined();
+      expect(useCase.getBySession('asistencia-2')['p-2']?.status).toBe('present');
+      expect(useCase.getBySession('asistencia-2')['p-1']).toBeUndefined();
+    });
+
+    it('should clear records for a specific session without affecting others', () => {
+      const repo = new LocalStorageAttendanceRepository();
+      const useCase = new ManageAttendanceUseCase(repo);
+
+      useCase.toggle('asistencia-1', 'p-1');
+      useCase.toggle('asistencia-2', 'p-2');
+
+      useCase.clearSession('asistencia-1');
+      expect(useCase.getBySession('asistencia-1')).toEqual({});
+      expect(useCase.getBySession('asistencia-2')['p-2']?.status).toBe('present');
     });
   });
 
