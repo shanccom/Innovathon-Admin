@@ -60,11 +60,11 @@ export function renderSidebar(currentPath) {
       </nav>
 
       <div class="sidebar-footer">
-        <div class="user-badge-demo" title="Elemento demostrativo - Sin sesión activa real">
-          <div class="user-avatar">${DEMO_USER.avatarInitial}</div>
-          <div class="user-info">
-            <div class="user-name">${DEMO_USER.name}</div>
-            <span class="user-role-badge">${DEMO_USER.role}</span>
+        <div class="sidebar-user-minimal" title="Sesión demostrativa (sin autenticación)">
+          <div class="user-avatar-minimal">IM</div>
+          <div class="user-info-minimal">
+            <span class="user-name-minimal">Comité Organizador</span>
+            <span class="user-meta-minimal">demo</span>
           </div>
         </div>
       </div>
