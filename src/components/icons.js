@@ -149,5 +149,11 @@ export const icons = {
       <polyline points="22,6 12,13 2,6"></polyline>
       <polyline points="16 19 18 21 22 17"></polyline>
     </svg>
+  `,
+  laptop: `
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="12" rx="2"></rect>
+      <line x1="2" y1="20" x2="22" y2="20"></line>
+    </svg>
   `
 };

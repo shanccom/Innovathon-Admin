@@ -67,39 +67,8 @@ export function initRouter(appElement) {
       breadcrumbs: routeConfig.breadcrumbs,
       contentHtml,
     });
-
-    // Attach event listeners for mobile drawer & interactions
-    setupInteractions();
-  }
-
-  function setupInteractions() {
-    const menuBtn = document.getElementById('menuToggleBtn');
-    const sidebar = document.getElementById('appSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-
-    if (menuBtn && sidebar && overlay) {
-      menuBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('open');
-      });
-
-      overlay.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('open');
-      });
-
-      // Close sidebar when clicking a nav item on mobile
-      const navLinks = sidebar.querySelectorAll('.nav-item');
-      navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-          sidebar.classList.remove('open');
-          overlay.classList.remove('open');
-        });
-      });
-    }
   }
 
   window.addEventListener('hashchange', handleRoute);
-  // Initial load
   handleRoute();
 }

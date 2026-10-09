@@ -1,4 +1,3 @@
-import { icons } from './icons.js';
 import { DEMO_USER } from '../data/demoState.js';
 
 export function renderHeader({ title, breadcrumbs = [] }) {
@@ -16,9 +15,6 @@ export function renderHeader({ title, breadcrumbs = [] }) {
   return `
     <header class="app-header">
       <div class="header-left">
-        <button class="mobile-menu-toggle" id="menuToggleBtn" aria-label="Abrir menú de navegación">
-          ${icons.menu}
-        </button>
         <div class="header-breadcrumbs">
           ${breadcrumbHtml}
         </div>
