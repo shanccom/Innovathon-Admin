@@ -62,7 +62,23 @@ Para habilitarlo en el repositorio de GitHub:
 
 ---
 
+## 📊 Integración con Google Sheets (Hoja «Registros»)
+
+El panel cuenta con un servicio reactivo (`src/services/participantsService.js`) conectado a la hoja oficial de Innovathon Mollendo 2026:
+- **ID Hoja de Cálculo**: `1U48ftJJns3-4waJrt4A4uaI4OBNQoeyg1sOzzvXllI8`
+- **Pestaña sincronizada**: `Registros`
+
+### Modos de Conexión admitidos:
+1. **Lectura directa vía Google Visualization API (GViz)**:
+   - Requiere compartir la hoja en Google Drive como **"Cualquier persona con el enlace (Lector)"**.
+2. **Conector Google Apps Script Web App**:
+   - Implementa un Web App en `Extensiones > Apps Script` para leer los registros sin hacer la hoja pública y permitiendo el guardado de asistencias.
+   - Configurable directamente desde la pestaña **Configuración** (`#/configuracion`).
+
+---
+
 ## 📋 Estado del Proyecto
 
-- **Fase 1 (Actual)**: Estructura visual, layout administrativo, navegación reactiva, diseño responsive, tarjetas de módulos y estados vacíos informativos.
-- **Fase 2 (Próxima)**: Conexión con Google Apps Script backend (`google.script.run`), lectura de hoja de cálculo `Registros` y escritura en `Asistencias`, generación de PDF en Google Drive y envíos automáticos vía Gmail.
+- **Fase 1 (Completada)**: Estructura visual, layout administrativo, navegación reactiva con hash routing, diseño responsive.
+- **Fase 2 (En curso / Implementada)**: Conexión dinámica con Google Sheets para la hoja `Registros`, métricas en vivo en Dashboard, buscador de participantes en tiempo real y registro de asistencias por sesión en `#/asistencias`.
+- **Fase 3 (Próxima)**: Automatización de certificados vía Google Drive / Docs y envíos masivos por correo vía Gmail.

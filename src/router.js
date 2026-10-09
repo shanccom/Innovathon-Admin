@@ -1,9 +1,9 @@
 import { renderLayout } from './components/Layout.js';
-import { renderDashboard } from './pages/Dashboard.js';
-import { renderAttendance } from './pages/Attendance.js';
+import { renderDashboard, afterDashboardRender } from './pages/Dashboard.js';
+import { renderAttendance, afterAttendanceRender } from './pages/Attendance.js';
 import { renderCertificates } from './pages/Certificates.js';
 import { renderAnnouncements } from './pages/Announcements.js';
-import { renderSettings } from './pages/Settings.js';
+import { renderSettings, afterSettingsRender } from './pages/Settings.js';
 
 const routes = {
   '#/': {
@@ -11,6 +11,7 @@ const routes = {
     pageTitle: 'Panel principal',
     breadcrumbs: [{ label: 'Inicio', path: '#/' }],
     render: renderDashboard,
+    afterRender: afterDashboardRender,
   },
   '#/asistencias': {
     title: 'Control de Asistencias - Innovathon Manager',
@@ -20,6 +21,7 @@ const routes = {
       { label: 'Asistencias', path: '#/asistencias' },
     ],
     render: renderAttendance,
+    afterRender: afterAttendanceRender,
   },
   '#/certificados': {
     title: 'Gestión de Certificados - Innovathon Manager',
@@ -47,6 +49,7 @@ const routes = {
       { label: 'Configuración', path: '#/configuracion' },
     ],
     render: renderSettings,
+    afterRender: afterSettingsRender,
   },
 };
 
@@ -67,6 +70,10 @@ export function initRouter(appElement) {
       breadcrumbs: routeConfig.breadcrumbs,
       contentHtml,
     });
+
+    if (typeof routeConfig.afterRender === 'function') {
+      routeConfig.afterRender();
+    }
   }
 
   window.addEventListener('hashchange', handleRoute);
