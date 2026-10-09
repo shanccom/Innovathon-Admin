@@ -255,10 +255,11 @@ button {
 }
 
 .sidebar-brand-container {
-  padding: 1.4rem 1.25rem;
+  padding: 1.5rem 1.25rem;
   border-bottom: 1px solid rgba(138, 100, 255, 0.12);
   display: flex;
   align-items: center;
+  justify-content: center;
   position: relative;
   z-index: 1;
 }
@@ -266,6 +267,7 @@ button {
 .sidebar-brand-link {
   display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
 }
 
@@ -274,6 +276,7 @@ button {
   width: auto;
   max-width: 100%;
   object-fit: contain;
+  margin: 0 auto;
   image-rendering: -webkit-optimize-contrast;
   transition: transform var(--transition-fast);
 }
