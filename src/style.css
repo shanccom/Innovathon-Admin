@@ -6,10 +6,10 @@
  */
 
 :root {
-  /* Typography */
-  --font-display: 'Syne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Typography: Inter oficial como tipografía intuitiva, nítida y geométrica de la UI */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   /* Official Landing Palette */
   --color-midnight: #070a18;
@@ -83,7 +83,7 @@
 }
 
 body {
-  font-family: var(--font-body);
+  font-family: var(--font-primary);
   background-color: var(--bg-app);
   color: var(--text-main);
   line-height: 1.5;
@@ -92,7 +92,8 @@ body {
 }
 
 h1, h2, h3 {
-  font-family: var(--font-display);
+  font-family: var(--font-primary);
+  letter-spacing: -0.03em;
 }
 
 a {
