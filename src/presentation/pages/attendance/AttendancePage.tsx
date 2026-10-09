@@ -8,6 +8,7 @@ import { AttendanceSessionMap } from '../../../domain/models/attendance.model';
 import { Icon } from '../../components/common/Icon';
 import { QrCameraScanner } from '../../components/attendance/QrCameraScanner';
 import { playAudioFeedback } from '../../utils/audio';
+import { appsScriptAttendanceClient } from '../../../infrastructure/api/apps-script-attendance.client';
 
 interface ScanFeedback {
   type: 'success' | 'warning' | 'error';
@@ -116,6 +117,19 @@ export const AttendancePage: React.FC = () => {
     // Registrar asistencia
     markPresent(found.id);
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    
+    // Sincronizar en segundo plano con la hoja Asistencias en Google Sheets (Formato Matriz)
+    appsScriptAttendanceClient.syncToMatrix({
+      action: 'markAttendance',
+      codigo: found.codigo,
+      dni: found.dni,
+      nombre: found.nombre,
+      equipo: found.equipo,
+      sessionId: activeSessionId,
+      sessionName: activeSession?.name || 'Asistencia 1',
+      timestamp: nowTime,
+    });
+
     if (soundEnabled) playAudioFeedback('success');
     setFeedback({
       type: 'success',
@@ -618,7 +632,20 @@ export const AttendancePage: React.FC = () => {
                         <button
                           className={`btn btn-sm ${isPresent ? 'btn-secondary' : 'btn-primary'}`}
                           type="button"
-                          onClick={() => toggleAttendance(p.id, att?.status)}
+                          onClick={() => {
+                            const nextStatus = toggleAttendance(p.id, att?.status);
+                            const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                            appsScriptAttendanceClient.syncToMatrix({
+                              action: nextStatus === 'present' ? 'markAttendance' : 'unmarkAttendance',
+                              codigo: p.codigo,
+                              dni: p.dni,
+                              nombre: p.nombre,
+                              equipo: p.equipo,
+                              sessionId: activeSessionId,
+                              sessionName: activeSession?.name || 'Asistencia 1',
+                              timestamp: nextStatus === 'present' ? nowTime : '',
+                            });
+                          }}
                         >
                           {isPresent ? 'Desmarcar' : 'Registrar entrada'}
                         </button>

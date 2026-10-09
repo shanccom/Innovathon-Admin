@@ -6,7 +6,8 @@ import { Icon } from '../../components/common/Icon';
 
 const SAMPLE_APPS_SCRIPT_CODE = `/**
  * Backend de Google Apps Script para Innovathon Mollendo 2026
- * Permite leer "Registros" y escribir en "Asistencias" de forma segura.
+ * - Lectura en tiempo real de la hoja «Registros»
+ * - Escritura automática en FORMATO MATRIZ en la hoja «Asistencias»
  */
 
 function doGet(e) {
@@ -33,6 +34,74 @@ function doGet(e) {
       sheet: sheet.getName(),
       total: rows.length,
       data: rows
+    });
+  } catch (err) {
+    return responseJSON({ success: false, error: err.message });
+  }
+}
+
+function doPost(e) {
+  try {
+    const contents = e.postData ? e.postData.contents : "";
+    const payload = JSON.parse(contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // 1. Obtener o crear la hoja "Asistencias" en FORMATO MATRIZ
+    let sheet = ss.getSheetByName("Asistencias");
+    if (!sheet) {
+      sheet = ss.insertSheet("Asistencias");
+      sheet.appendRow(["Código", "DNI", "Participante", "Equipo", "Asistencia 1", "Asistencia 2", "Asistencia 3"]);
+      sheet.getRange(1, 1, 1, 7).setFontWeight("bold").setBackground("#0f3d2e").setFontColor("#ffffff");
+      sheet.setFrozenRows(1);
+    }
+    
+    // 2. Localizar o crear la columna para la sesión (ej. "Asistencia 1", "Asistencia 2", etc.)
+    const headers = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0];
+    const sessionName = payload.sessionName || payload.sessionId || "Asistencia 1";
+    
+    let sessionColIndex = headers.indexOf(sessionName) + 1;
+    if (sessionColIndex === 0) {
+      sessionColIndex = headers.length + 1;
+      sheet.getRange(1, sessionColIndex).setValue(sessionName).setFontWeight("bold").setBackground("#0f3d2e").setFontColor("#ffffff");
+    }
+    
+    // 3. Buscar si el participante ya existe en la matriz por Código o DNI
+    const lastRow = sheet.getLastRow();
+    let participantRowIndex = -1;
+    
+    if (lastRow > 1) {
+      const data = sheet.getRange(2, 1, lastRow - 1, 2).getValues(); // Cols A (Código) y B (DNI)
+      for (let i = 0; i < data.length; i++) {
+        const rowCode = String(data[i][0]).trim().toLowerCase();
+        const rowDni = String(data[i][1]).trim().toLowerCase();
+        const searchCode = String(payload.codigo || "").trim().toLowerCase();
+        const searchDni = String(payload.dni || "").trim().toLowerCase();
+        
+        if ((searchCode && rowCode === searchCode) || (searchDni && rowDni === searchDni)) {
+          participantRowIndex = i + 2;
+          break;
+        }
+      }
+    }
+    
+    // 4. Si es nuevo en la matriz, agregar fila
+    if (participantRowIndex === -1) {
+      participantRowIndex = lastRow + 1;
+      sheet.getRange(participantRowIndex, 1).setValue(payload.codigo || "");
+      sheet.getRange(participantRowIndex, 2).setValue(payload.dni || "");
+      sheet.getRange(participantRowIndex, 3).setValue(payload.nombre || "");
+      sheet.getRange(participantRowIndex, 4).setValue(payload.equipo || "");
+    }
+    
+    // 5. Escribir o limpiar la marca de asistencia
+    const valueToSet = payload.action === 'unmarkAttendance' ? '' : (payload.timestamp || new Date().toLocaleTimeString());
+    sheet.getRange(participantRowIndex, sessionColIndex).setValue(valueToSet);
+    
+    return responseJSON({
+      success: true,
+      message: "Matriz actualizada correctamente",
+      row: participantRowIndex,
+      col: sessionColIndex
     });
   } catch (err) {
     return responseJSON({ success: false, error: err.message });

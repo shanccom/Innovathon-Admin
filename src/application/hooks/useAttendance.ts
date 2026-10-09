@@ -75,10 +75,11 @@ export function useAttendance(initialSessionId?: string) {
     setAllRecords(manageAttendanceUseCase.getAll());
   }, [activeSessionId]);
 
-  const toggleAttendance = useCallback((participantId: string, currentStatus?: AttendanceStatus) => {
-    manageAttendanceUseCase.toggle(activeSessionId, participantId, currentStatus);
+  const toggleAttendance = useCallback((participantId: string, currentStatus?: AttendanceStatus): AttendanceStatus => {
+    const nextStatus = manageAttendanceUseCase.toggle(activeSessionId, participantId, currentStatus);
     setRecords(manageAttendanceUseCase.getBySession(activeSessionId));
     setAllRecords(manageAttendanceUseCase.getAll());
+    return nextStatus;
   }, [activeSessionId]);
 
   return {
