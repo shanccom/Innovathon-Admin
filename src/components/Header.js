@@ -36,8 +36,8 @@ export function renderHeader({ title, breadcrumbs = [] }) {
         </button>
 
         <div class="demo-account-chip" title="Sesión de demostración">
-          <div class="account-avatar-sm">${DEMO_USER.avatarInitial}</div>
-          <span>Comité</span>
+          <span class="account-dot"></span>
+          <span>Comité Organizador</span>
         </div>
       </div>
     </header>

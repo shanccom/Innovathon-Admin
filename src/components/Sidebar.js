@@ -61,7 +61,7 @@ export function renderSidebar(currentPath) {
 
       <div class="sidebar-footer">
         <div class="sidebar-user-minimal" title="Sesión demostrativa (sin autenticación)">
-          <div class="user-avatar-minimal">IM</div>
+          <div class="user-status-dot"></div>
           <div class="user-info-minimal">
             <span class="user-name-minimal">Comité Organizador</span>
             <span class="user-meta-minimal">demo</span>
