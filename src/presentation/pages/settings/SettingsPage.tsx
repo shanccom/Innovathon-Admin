@@ -46,20 +46,22 @@ function doPost(e) {
 
     // 1. Envío de prueba individual
     if (action === 'send_test') {
+      let html = contents.htmlBody || '';
       const emailParams = {
         to: contents.to,
         subject: contents.subject,
-        htmlBody: contents.htmlBody,
         body: contents.plainBody || '',
         name: 'Innovathon Mollendo 2026'
       };
 
       if (contents.imageBase64 && contents.imageMimeType) {
-        const raw = contents.imageBase64.split(',')[1] || contents.imageBase64;
+        const raw = contents.imageBase64.indexOf(',') >= 0 ? contents.imageBase64.split(',')[1] : contents.imageBase64;
         emailParams.inlineImages = {
           imagen: Utilities.newBlob(Utilities.base64Decode(raw), contents.imageMimeType, 'banner')
         };
+        html = html.replace(/src="data:image\/[^;]+;base64,[^"]+"/g, 'src="cid:imagen"');
       }
+      emailParams.htmlBody = html;
 
       MailApp.sendEmail(emailParams);
       return responseJSON({ success: true, message: 'Prueba enviada a ' + contents.to });
@@ -77,7 +79,7 @@ function doPost(e) {
 
       let imageBlob = null;
       if (contents.template && contents.template.imageBase64) {
-        const raw = contents.template.imageBase64.split(',')[1] || contents.template.imageBase64;
+        const raw = contents.template.imageBase64.indexOf(',') >= 0 ? contents.template.imageBase64.split(',')[1] : contents.template.imageBase64;
         imageBlob = Utilities.newBlob(Utilities.base64Decode(raw), contents.template.imageMimeType || 'image/jpeg', 'banner');
       }
 
@@ -88,16 +90,18 @@ function doPost(e) {
       for (let i = 0; i < recipients.length; i++) {
         const r = recipients[i];
         try {
+          let html = r.htmlBody || '';
           const emailParams = {
             to: r.correo,
             subject: r.asunto,
-            htmlBody: r.htmlBody,
             body: r.plainBody || '',
             name: 'Innovathon Mollendo 2026'
           };
           if (imageBlob) {
+            html = html.replace(/src="data:image\/[^;]+;base64,[^"]+"/g, 'src="cid:imagen"');
             emailParams.inlineImages = { imagen: imageBlob };
           }
+          emailParams.htmlBody = html;
           MailApp.sendEmail(emailParams);
           enviados++;
           detalles.push({ correo: r.correo, nombre: r.nombre, estado: 'ENVIADO', timestamp: new Date().toLocaleTimeString() });
