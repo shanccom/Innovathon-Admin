@@ -154,94 +154,83 @@ export const SelfCheckinPage: React.FC = () => {
     <div
       style={{
         minHeight: '100vh',
-        backgroundColor: '#070a18',
-        color: '#ffffff',
+        backgroundColor: '#F8FAFC',
+        color: '#0F172A',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '1.25rem',
+        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
     >
       <div
         style={{
-          maxWidth: '440px',
+          maxWidth: '420px',
           width: '100%',
-          background: 'rgba(10, 15, 38, 0.95)',
-          border: '1px solid #1b254b',
+          background: '#FFFFFF',
+          border: '1px solid #E2E8F0',
           borderRadius: '24px',
-          padding: '2rem 1.5rem',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+          padding: '2.25rem 1.75rem',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03)',
           textAlign: 'center',
         }}
       >
-        {/* Encabezado */}
-        <div style={{ marginBottom: '1.5rem' }}>
+        {/* Encabezado Simple */}
+        <div style={{ marginBottom: '1.75rem' }}>
           <img
             src={logoPrincipal}
-            alt="Innovathon Mollendo"
-            style={{ height: '48px', maxWidth: '100%', objectFit: 'contain' }}
+            alt="Innovathon"
+            style={{ height: '44px', maxWidth: '100%', objectFit: 'contain' }}
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).src = logoLight;
             }}
           />
-          <div
-            style={{
-              display: 'inline-block',
-              marginTop: '0.75rem',
-              padding: '0.25rem 0.85rem',
-              borderRadius: '9999px',
-              backgroundColor: 'rgba(203, 251, 69, 0.15)',
-              border: '1px solid #cbfb45',
-              color: '#cbfb45',
-              fontSize: '0.75rem',
-              fontWeight: 800,
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-            }}
-          >
-            Auto Check-in Cero Filas
-          </div>
+          <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: '0.85rem 0 0.25rem' }}>
+            Registro de Asistencia
+          </h1>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: '#64748B' }}>
+            Innovathon Mollendo 2026
+          </p>
         </div>
 
         {/* Indicador de Sesión Activa */}
         <div
           style={{
-            backgroundColor: '#131b3b',
+            backgroundColor: '#EEF2FF',
             borderRadius: '12px',
             padding: '0.65rem 1rem',
             marginBottom: '1.5rem',
-            fontSize: '0.85rem',
-            color: '#c9b4ff',
-            display: 'flex',
+            fontSize: '0.875rem',
+            color: '#4338CA',
+            display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.5rem',
+            fontWeight: 600,
           }}
         >
-          <Icon name="attendance" size={16} />
-          <span>
-            Sesión activa: <strong>{targetSession.name}</strong>
-          </span>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#4F46E5' }} />
+          <span>{targetSession.name}</span>
         </div>
 
         {/* Mensaje de Éxito */}
         {result?.status === 'success' && (
           <div
             style={{
-              backgroundColor: '#064e3b',
-              border: '2px solid #10b981',
+              backgroundColor: '#F0FDF4',
+              border: '1px solid #86EFAC',
               borderRadius: '16px',
-              padding: '1.5rem 1rem',
-              marginBottom: '1.5rem',
+              padding: '1.75rem 1.25rem',
+              marginBottom: '1.25rem',
             }}
           >
             <div
               style={{
-                width: '56px',
-                height: '56px',
+                width: '52px',
+                height: '52px',
                 borderRadius: '50%',
-                backgroundColor: '#10b981',
+                backgroundColor: '#16A34A',
                 color: '#fff',
                 margin: '0 auto 1rem',
                 display: 'flex',
@@ -249,28 +238,29 @@ export const SelfCheckinPage: React.FC = () => {
                 justifyContent: 'center',
               }}
             >
-              <Icon name="check" size={32} />
+              <Icon name="check" size={28} />
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ecfdf5', marginBottom: '0.5rem' }}>
-              ¡Asistencia Confirmada!
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#166534', marginBottom: '0.5rem' }}>
+              ¡Asistencia Registrada!
             </h3>
-            <p style={{ fontSize: '0.95rem', color: '#a7f3d0', marginBottom: '1rem', lineHeight: 1.4 }}>
+            <p style={{ fontSize: '0.9rem', color: '#15803D', marginBottom: '1.25rem', lineHeight: 1.4 }}>
               {result.message}
             </p>
             {result.participant && (
               <div
                 style={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  borderRadius: '10px',
-                  padding: '0.75rem',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '12px',
+                  padding: '0.85rem 1rem',
                   fontSize: '0.85rem',
                   textAlign: 'left',
-                  color: '#e2e8f0',
-                  marginBottom: '1rem',
+                  color: '#334155',
+                  border: '1px solid #DCFCE7',
+                  marginBottom: '1.25rem',
+                  lineHeight: '1.6',
                 }}
               >
-                <div><strong>Estudiante:</strong> {result.participant.nombre}</div>
-                <div><strong>Código:</strong> {result.participant.codigo}</div>
+                <div><strong>Participante:</strong> {result.participant.nombre}</div>
                 <div><strong>DNI:</strong> {result.participant.dni}</div>
                 <div><strong>Hora:</strong> {result.time}</div>
               </div>
@@ -280,8 +270,8 @@ export const SelfCheckinPage: React.FC = () => {
               style={{
                 width: '100%',
                 padding: '0.85rem',
-                backgroundColor: '#10b981',
-                color: '#070a18',
+                backgroundColor: '#16A34A',
+                color: '#FFFFFF',
                 borderRadius: '12px',
                 fontWeight: 700,
                 fontSize: '0.95rem',
@@ -298,19 +288,19 @@ export const SelfCheckinPage: React.FC = () => {
         {result?.status === 'already' && (
           <div
             style={{
-              backgroundColor: '#451a03',
-              border: '2px solid #f59e0b',
+              backgroundColor: '#FFFBEB',
+              border: '1px solid #FDE68A',
               borderRadius: '16px',
-              padding: '1.5rem 1rem',
-              marginBottom: '1.5rem',
+              padding: '1.75rem 1.25rem',
+              marginBottom: '1.25rem',
             }}
           >
             <div
               style={{
-                width: '56px',
-                height: '56px',
+                width: '52px',
+                height: '52px',
                 borderRadius: '50%',
-                backgroundColor: '#f59e0b',
+                backgroundColor: '#D97706',
                 color: '#fff',
                 margin: '0 auto 1rem',
                 display: 'flex',
@@ -318,23 +308,24 @@ export const SelfCheckinPage: React.FC = () => {
                 justifyContent: 'center',
               }}
             >
-              <Icon name="alertCircle" size={32} />
+              <Icon name="alertCircle" size={28} />
             </div>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fef3c7', marginBottom: '0.5rem' }}>
-              Ya marcaste tu asistencia
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#92400E', marginBottom: '0.5rem' }}>
+              Ya estás registrado
             </h3>
-            <p style={{ fontSize: '0.9rem', color: '#fde68a', marginBottom: '1rem' }}>
-              Ya registraste tu asistencia para esta sesión ({result.time}).
+            <p style={{ fontSize: '0.9rem', color: '#B45309', marginBottom: '1.25rem' }}>
+              Tu asistencia para esta sesión ya fue marcada previamente ({result.time}).
             </p>
             <button
               onClick={resetForm}
               style={{
                 width: '100%',
-                padding: '0.75rem',
-                backgroundColor: '#f59e0b',
-                color: '#070a18',
+                padding: '0.85rem',
+                backgroundColor: '#D97706',
+                color: '#FFFFFF',
                 borderRadius: '12px',
                 fontWeight: 700,
+                fontSize: '0.95rem',
                 border: 'none',
                 cursor: 'pointer',
               }}
@@ -348,19 +339,19 @@ export const SelfCheckinPage: React.FC = () => {
         {result?.status === 'error' && (
           <div
             style={{
-              backgroundColor: '#450a0a',
-              border: '2px solid #ef4444',
+              backgroundColor: '#FEF2F2',
+              border: '1px solid #FECACA',
               borderRadius: '16px',
-              padding: '1.5rem 1rem',
-              marginBottom: '1.5rem',
+              padding: '1.75rem 1.25rem',
+              marginBottom: '1.25rem',
             }}
           >
             <div
               style={{
-                width: '56px',
-                height: '56px',
+                width: '52px',
+                height: '52px',
                 borderRadius: '50%',
-                backgroundColor: '#ef4444',
+                backgroundColor: '#DC2626',
                 color: '#fff',
                 margin: '0 auto 1rem',
                 display: 'flex',
@@ -368,23 +359,24 @@ export const SelfCheckinPage: React.FC = () => {
                 justifyContent: 'center',
               }}
             >
-              <Icon name="x" size={32} />
+              <Icon name="x" size={28} />
             </div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fee2e2', marginBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#991B1B', marginBottom: '0.5rem' }}>
               DNI o Código no encontrado
             </h3>
-            <p style={{ fontSize: '0.85rem', color: '#fca5a5', marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.875rem', color: '#B91C1C', marginBottom: '1.25rem', lineHeight: 1.4 }}>
               {result.message}
             </p>
             <button
               onClick={resetForm}
               style={{
                 width: '100%',
-                padding: '0.75rem',
-                backgroundColor: '#ef4444',
-                color: '#fff',
+                padding: '0.85rem',
+                backgroundColor: '#DC2626',
+                color: '#FFFFFF',
                 borderRadius: '12px',
                 fontWeight: 700,
+                fontSize: '0.95rem',
                 border: 'none',
                 cursor: 'pointer',
               }}
@@ -401,35 +393,41 @@ export const SelfCheckinPage: React.FC = () => {
               <label
                 style={{
                   display: 'block',
-                  fontSize: '0.85rem',
+                  fontSize: '0.875rem',
                   fontWeight: 600,
-                  color: '#cbd5e1',
+                  color: '#334155',
                   marginBottom: '0.5rem',
                 }}
               >
-                Ingresa tu DNI o Código (ej. 74206871 o IM-2026-0007):
+                Ingresa tu DNI o Código:
               </label>
               <input
                 type="text"
                 value={identificador}
                 onChange={(e) => setIdentificador(e.target.value)}
-                placeholder="DNI o Código..."
+                placeholder="Ej. 74206871 o IM-2026-0007"
                 autoFocus
                 required
                 autoComplete="off"
                 style={{
                   width: '100%',
-                  padding: '1rem 1.25rem',
-                  fontSize: '1.2rem',
-                  fontWeight: 700,
+                  padding: '1rem',
+                  fontSize: '1.15rem',
+                  fontWeight: 600,
                   textAlign: 'center',
-                  backgroundColor: '#0a0f26',
-                  color: '#ffffff',
-                  border: '2px solid #741cf3',
-                  borderRadius: '14px',
+                  backgroundColor: '#F8FAFC',
+                  color: '#0F172A',
+                  border: '2px solid #CBD5E1',
+                  borderRadius: '12px',
                   outline: 'none',
-                  boxShadow: '0 0 15px rgba(116, 28, 243, 0.3)',
                   boxSizing: 'border-box',
+                  transition: 'border-color 0.15s ease',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#4F46E5';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#CBD5E1';
                 }}
               />
             </div>
@@ -439,32 +437,32 @@ export const SelfCheckinPage: React.FC = () => {
               disabled={submitting || !identificador.trim()}
               style={{
                 width: '100%',
-                padding: '1.1rem',
-                fontSize: '1.05rem',
-                fontWeight: 800,
-                color: '#070a18',
-                backgroundColor: '#cbfb45',
+                padding: '1rem',
+                fontSize: '1rem',
+                fontWeight: 700,
+                color: '#FFFFFF',
+                backgroundColor: '#4F46E5',
                 border: 'none',
-                borderRadius: '14px',
+                borderRadius: '12px',
                 cursor: submitting ? 'wait' : 'pointer',
                 opacity: submitting || !identificador.trim() ? 0.6 : 1,
-                boxShadow: '0 0 20px rgba(203, 251, 69, 0.4)',
+                boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.5rem',
               }}
             >
-              <Icon name="checkCircle" size={20} />
+              <Icon name="checkCircle" size={18} />
               <span>
-                {submitting ? 'Registrando en Google Sheets...' : 'Confirmar mi Asistencia'}
+                {submitting ? 'Confirmando asistencia...' : 'Confirmar Asistencia'}
               </span>
             </button>
           </form>
         )}
 
-        <div style={{ marginTop: '1.5rem', fontSize: '0.75rem', color: '#64748b' }}>
-          Innovathon Mollendo 2026 • Registro oficial en tiempo real
+        <div style={{ marginTop: '1.5rem', fontSize: '0.75rem', color: '#94A3B8' }}>
+          Sistema oficial de asistencia • Innovathon Mollendo
         </div>
       </div>
     </div>

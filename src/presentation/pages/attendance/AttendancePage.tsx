@@ -6,7 +6,6 @@ import { useConfig } from '../../../application/hooks/useConfig';
 import { Participant } from '../../../domain/models/participant.model';
 import { AttendanceSessionMap } from '../../../domain/models/attendance.model';
 import { Icon } from '../../components/common/Icon';
-import { QrCameraScanner } from '../../components/attendance/QrCameraScanner';
 import { SelfCheckinQrModal } from '../../components/attendance/SelfCheckinQrModal';
 import { playAudioFeedback } from '../../utils/audio';
 import { appsScriptAttendanceClient } from '../../../infrastructure/api/apps-script-attendance.client';
@@ -21,7 +20,6 @@ interface ScanFeedback {
 export const AttendancePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [scanCodeInput, setScanCodeInput] = useState<string>('');
-  const [showCamera, setShowCamera] = useState<boolean>(false);
   const [showQrModal, setShowQrModal] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [feedback, setFeedback] = useState<ScanFeedback | null>(null);
@@ -47,10 +45,8 @@ export const AttendancePage: React.FC = () => {
 
   // Autofoco en el input de escaneo al cargar o cambiar sesión
   useEffect(() => {
-    if (!showCamera) {
-      scanInputRef.current?.focus();
-    }
-  }, [activeSessionId, showCamera]);
+    scanInputRef.current?.focus();
+  }, [activeSessionId]);
 
   const activeSession = useMemo(() => {
     return sessions.find(s => s.id === activeSessionId) || sessions[0];
@@ -330,10 +326,10 @@ export const AttendancePage: React.FC = () => {
         >
           <div>
             <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-midnight)', margin: 0 }}>
-              Toma de Asistencia: <span style={{ color: 'var(--color-purple)' }}>{activeSession?.name}</span>
+              Registro de Asistencia: <span style={{ color: 'var(--color-purple)' }}>{activeSession?.name}</span>
             </h2>
             <p style={{ margin: '0.2rem 0 0', fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-              Pasa el lector de código de barras/QR o ingresa el código del participante
+              Ingresa el DNI o Código del participante (con lector de mano o teclado)
             </p>
           </div>
 
@@ -348,27 +344,8 @@ export const AttendancePage: React.FC = () => {
               <Icon name="volume2" size={16} />
               <span>{soundEnabled ? 'Sonido ON' : 'Sonido OFF'}</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setShowCamera(!showCamera)}
-              className={`btn btn-sm ${showCamera ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-            >
-              <Icon name="camera" size={16} />
-              <span>{showCamera ? 'Ocultar cámara' : 'Escanear con cámara (Barras)'}</span>
-            </button>
           </div>
         </div>
-
-        {/* Lector de Código de Barras por cámara si está activo */}
-        {showCamera && (
-          <div style={{ marginBottom: '1.25rem' }}>
-            <QrCameraScanner
-              onScan={(code) => handleProcessCode(code)}
-              onClose={() => setShowCamera(false)}
-            />
-          </div>
-        )}
 
         {/* Input de escaneo rápido estilo torniquete con autofocus continuo */}
         <form onSubmit={handleScanSubmit} style={{ display: 'flex', gap: '0.75rem' }}>
@@ -382,11 +359,11 @@ export const AttendancePage: React.FC = () => {
               backgroundColor: '#fff',
             }}
           >
-            <Icon name="qrCode" size={24} style={{ color: 'var(--color-purple)' }} />
+            <Icon name="attendance" size={24} style={{ color: 'var(--color-purple)' }} />
             <input
               ref={scanInputRef}
               type="text"
-              placeholder="Escanea aquí con pistola USB o escribe Código / DNI y presiona Enter..."
+              placeholder="Escribe DNI o Código (ej. 72859994 o IM-2026-0003) y presiona Enter..."
               value={scanCodeInput}
               onChange={(e) => setScanCodeInput(e.target.value)}
               style={{ fontSize: '1.05rem', fontWeight: 600 }}

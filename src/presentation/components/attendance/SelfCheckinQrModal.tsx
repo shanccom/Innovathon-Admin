@@ -81,25 +81,24 @@ export const SelfCheckinQrModal: React.FC<SelfCheckinQrModalProps> = ({
           maxHeight: '92vh',
         }}
       >
-        {/* Header con gradiente */}
+        {/* Header Minimalista y Limpio */}
         <div
           style={{
-            background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%)',
             padding: '1.25rem 1.5rem',
-            color: '#FFFFFF',
+            borderBottom: '1px solid #E2E8F0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <img src={logoPrincipal} alt="Innovathon Logo" style={{ height: '32px', width: 'auto' }} />
+            <img src={logoPrincipal} alt="Innovathon" style={{ height: '32px', width: 'auto' }} />
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.01em' }}>
-                QR de Auto Check-in (Cero Filas)
+              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.01em' }}>
+                Código QR de Asistencia
               </h2>
-              <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.9, color: '#E0E7FF' }}>
-                Los participantes escanean este código con la cámara de su celular
+              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: '#64748B' }}>
+                Los participantes escanean con su celular para registrarse
               </p>
             </div>
           </div>
@@ -108,7 +107,7 @@ export const SelfCheckinQrModal: React.FC<SelfCheckinQrModalProps> = ({
             onClick={onClose}
             aria-label="Cerrar modal"
             style={{
-              background: 'rgba(255, 255, 255, 0.2)',
+              background: '#F1F5F9',
               border: 'none',
               borderRadius: '9999px',
               width: '32px',
@@ -117,7 +116,7 @@ export const SelfCheckinQrModal: React.FC<SelfCheckinQrModalProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#FFFFFF',
+              color: '#64748B',
             }}
           >
             <Icon name="x" size={18} />
