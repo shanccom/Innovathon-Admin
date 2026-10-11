@@ -100,15 +100,13 @@ export const SelfCheckinPage: React.FC = () => {
       return;
     }
 
-    // 2. Validar duplicados en la sesión específica
+    // 2. Validar si ya está presente en la sesión específica
     const sessionRecords = allRecords[targetSession.id] || {};
-    const alreadyMarkedLocal = sessionRecords[found.id]?.status === 'present';
-    const localStoreKey = `innovathon_self_checkin_${targetSession.id}_${found.id}`;
-    const alreadyMarkedInPhone = localStorage.getItem(localStoreKey);
+    const alreadyMarked = sessionRecords[found.id]?.status === 'present';
 
-    if (alreadyMarkedLocal || alreadyMarkedInPhone) {
+    if (alreadyMarked) {
       setSubmitting(false);
-      const recordedTime = alreadyMarkedInPhone || sessionRecords[found.id]?.timestamp || 'Registrado';
+      const recordedTime = sessionRecords[found.id]?.timestamp || 'Registrado';
       setResult({
         status: 'already',
         participant: found,
@@ -122,7 +120,6 @@ export const SelfCheckinPage: React.FC = () => {
     // 3. Registrar asistencia en la sesión objetivo exacta
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     manageAttendanceUseCase.markPresent(targetSession.id, found.id);
-    localStorage.setItem(localStoreKey, nowTime);
 
     // Sincronizar en segundo plano con Google Apps Script con LockService
     appsScriptAttendanceClient.syncToMatrix({
