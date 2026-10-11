@@ -37,10 +37,10 @@ export function useParticipants(autoLoad = true) {
   }, []);
 
   useEffect(() => {
-    if (autoLoad && status.state === 'idle') {
+    if (autoLoad && (status.state === 'idle' || participants.length === 0)) {
       fetchParticipants(false);
     }
-  }, [autoLoad, fetchParticipants, status.state]);
+  }, [autoLoad, fetchParticipants, status.state, participants.length]);
 
   return {
     participants,

@@ -13,6 +13,9 @@ const DEFAULT_SESSIONS: AttendanceSession[] = [
   { id: 'asistencia-1', name: 'Asistencia 1', createdAt: 1 },
   { id: 'asistencia-2', name: 'Asistencia 2', createdAt: 2 },
   { id: 'asistencia-3', name: 'Asistencia 3', createdAt: 3 },
+  { id: 'asistencia-4', name: 'Asistencia 4', createdAt: 4 },
+  { id: 'asistencia-5', name: 'Asistencia 5', createdAt: 5 },
+  { id: 'asistencia-6', name: 'Asistencia 6', createdAt: 6 },
 ];
 
 export class LocalStorageAttendanceRepository implements AttendanceRepository {
@@ -22,7 +25,7 @@ export class LocalStorageAttendanceRepository implements AttendanceRepository {
         const raw = localStorage.getItem(SESSIONS_STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw) as AttendanceSession[];
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed) && parsed.length >= 6) {
             return parsed;
           }
         }
@@ -30,6 +33,7 @@ export class LocalStorageAttendanceRepository implements AttendanceRepository {
     } catch (e) {
       console.warn('Error reading attendance sessions:', e);
     }
+    this.saveSessions(DEFAULT_SESSIONS);
     return DEFAULT_SESSIONS;
   }
 

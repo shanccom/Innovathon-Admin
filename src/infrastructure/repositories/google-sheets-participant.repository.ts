@@ -144,7 +144,7 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
             ? json
             : json.data || json.rows || [];
           const validRows = rows.filter(r => this.isParticipantRow(r));
-          if (validRows.length > 0 || (json.success === true && Array.isArray(json.data))) {
+          if (validRows.length > 0 || (json && json.success === true && Array.isArray(json.data))) {
             const normalized = this.normalizeRows(validRows);
             this.cachedData = normalized;
             this.lastStatus = {
@@ -160,6 +160,8 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
               count: normalized.length,
               status: this.lastStatus,
             };
+          } else if (json && json.error) {
+            console.warn('Apps Script devolvió error:', json.error);
           }
         }
       } catch (err) {

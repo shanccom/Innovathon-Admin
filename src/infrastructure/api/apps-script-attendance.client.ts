@@ -5,14 +5,14 @@
 import { configRepository } from '../repositories/local-storage-config.repository';
 
 export interface SyncAttendancePayload {
-  action: 'markAttendance' | 'unmarkAttendance';
-  codigo: string;
-  dni: string;
-  nombre: string;
-  equipo: string;
+  action: 'markAttendance' | 'unmarkAttendance' | 'clearSession' | 'deleteSession';
+  codigo?: string;
+  dni?: string;
+  nombre?: string;
+  equipo?: string;
   sessionId: string;
   sessionName: string;
-  timestamp: string;
+  timestamp?: string;
 }
 
 export class AppsScriptAttendanceClient {
@@ -41,6 +41,15 @@ export class AppsScriptAttendanceClient {
       return false;
     }
   }
+
+  async clearSessionColumn(sessionName: string, sessionId: string): Promise<boolean> {
+    return this.syncToMatrix({
+      action: 'clearSession',
+      sessionName,
+      sessionId,
+    });
+  }
 }
 
 export const appsScriptAttendanceClient = new AppsScriptAttendanceClient();
+

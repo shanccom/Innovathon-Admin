@@ -23,17 +23,8 @@ export const DashboardPage: React.FC = () => {
           <h1 className="page-title">Panel principal</h1>
           <p className="page-subtitle">Gestiona las operaciones de Innovathon Mollendo desde un solo lugar</p>
         </div>
-        <div className="page-actions">
-          <Link
-            to="/configuracion"
-            className="btn btn-secondary btn-sm"
-            title="Configurar conexión con Google Sheets"
-          >
-            <Icon name="settings" />
-            <span>Conexión Google Sheets</span>
-          </Link>
-        </div>
       </div>
+
 
       {/* Resumen Operativo */}
       <section className="stats-grid" aria-label="Tarjetas de resumen">
@@ -88,9 +79,7 @@ export const DashboardPage: React.FC = () => {
                     </>
                   ) : status.state === 'error' || error ? (
                     <>
-                      <Link to="/configuracion" style={{ textDecoration: 'none' }}>
-                        <span className="badge-warning">Configurar</span>
-                      </Link>
+                      <span className="badge-warning">Alerta</span>
                       <span>
                         {isPermissionDenied ? 'Hoja privada en Drive' : 'Error de conexión'}
                       </span>
@@ -233,10 +222,6 @@ export const DashboardPage: React.FC = () => {
                   <strong>configurar el conector de Google Apps Script</strong>.
                 </div>
                 <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.75rem' }}>
-                  <Link to="/configuracion" className="btn btn-primary btn-sm">
-                    <Icon name="settings" />
-                    <span>Ver pasos de conexión</span>
-                  </Link>
                   <a
                     href={getSpreadsheetUrl()}
                     target="_blank"

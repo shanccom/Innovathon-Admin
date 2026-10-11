@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Icon } from '../common/Icon';
 
 interface QrCameraScannerProps {
@@ -14,42 +14,75 @@ export const QrCameraScanner: React.FC<QrCameraScannerProps> = ({ onScan, onClos
   const lastScannedRef = useRef<{ text: string; time: number }>({ text: '', time: 0 });
   const containerId = 'qr-reader-container';
 
+  const onScanRef = useRef(onScan);
   useEffect(() => {
+    onScanRef.current = onScan;
+  }, [onScan]);
+
+  useEffect(() => {
+    let isMounted = true;
     let html5QrCode: Html5Qrcode | null = null;
 
     const startScanner = async () => {
       try {
-        html5QrCode = new Html5Qrcode(containerId);
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        // Limpiar contenido previo si quedó algún video o canvas residual
+        container.innerHTML = '';
+
+        // Configuración especializada 100% en CÓDIGO DE BARRAS (Pase de acreditación CODE_128)
+        html5QrCode = new Html5Qrcode(containerId, {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128, // Formato exacto del correo: IM-2026-XXXX
+            Html5QrcodeSupportedFormats.CODE_39,
+          ],
+          verbose: false,
+        });
         scannerRef.current = html5QrCode;
 
+        // Visor rectangular horizontal específico para capturar las barras del celular de punta a punta
         const config = {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
+          fps: 25, // Máxima velocidad de muestreo
+          qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+            const width = Math.min(Math.floor(viewfinderWidth * 0.90), 380);
+            const height = Math.min(130, viewfinderHeight - 30); // Ventana estrecha de barras
+            return { width: Math.max(width, 280), height: Math.max(height, 110) };
+          },
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true, // Motor nativo de código de barras de Chrome/Edge/Safari
+          },
         };
 
         await html5QrCode.start(
           { facingMode: 'environment' },
           config,
+
           (decodedText: string) => {
             const now = Date.now();
-            // Evitar escaneos repetidos en ráfaga (cooldown de 1.8 segundos para el mismo código)
+            // Cooldown de 2 segundos SOLO si es el mismo código exacto para evitar lecturas dobles
             if (
               lastScannedRef.current.text === decodedText &&
-              now - lastScannedRef.current.time < 1800
+              now - lastScannedRef.current.time < 2000
             ) {
               return;
             }
             lastScannedRef.current = { text: decodedText, time: now };
-            onScan(decodedText);
+            onScanRef.current(decodedText);
           },
           () => {
             // Callback opcional de frames sin detección
           }
         );
 
-        setIsScanning(true);
+        if (isMounted) {
+          setIsScanning(true);
+        } else {
+          // Si el componente se desmontó mientras la cámara iniciaba (comportamiento StrictMode)
+          html5QrCode.stop().catch(() => {});
+        }
       } catch (err: unknown) {
+        if (!isMounted) return;
         const message = err instanceof Error ? err.message : 'No se pudo acceder a la cámara';
         if (message.includes('NotAllowedError') || message.includes('Permission')) {
           setError('Permiso de cámara denegado. Por favor concede acceso en tu navegador.');
@@ -62,15 +95,21 @@ export const QrCameraScanner: React.FC<QrCameraScannerProps> = ({ onScan, onClos
     startScanner();
 
     return () => {
+      isMounted = false;
       if (scannerRef.current) {
         try {
           if (scannerRef.current.isScanning) {
-            scannerRef.current.stop().catch(() => {});
+            scannerRef.current.stop().then(() => {
+              scannerRef.current?.clear();
+            }).catch(() => {});
+          } else {
+            scannerRef.current.clear();
           }
         } catch {}
       }
     };
-  }, [onScan]);
+  }, []);
+
 
   return (
     <div
@@ -94,7 +133,7 @@ export const QrCameraScanner: React.FC<QrCameraScannerProps> = ({ onScan, onClos
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Icon name="camera" size={20} style={{ color: 'var(--color-purple)' }} />
           <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-midnight)' }}>
-            Lector de Código QR con Cámara
+            Lector de Acreditación (Barras / QR)
           </h3>
           {isScanning && <span className="badge-live">Activo</span>}
         </div>
@@ -120,14 +159,14 @@ export const QrCameraScanner: React.FC<QrCameraScannerProps> = ({ onScan, onClos
             id={containerId}
             style={{
               width: '100%',
-              maxWidth: '380px',
+              maxWidth: '440px',
               borderRadius: 'var(--radius-md)',
               overflow: 'hidden',
               backgroundColor: '#000',
             }}
           />
-          <p style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Apunta la cámara al código QR impreso en el gafete o credencial del participante
+          <p style={{ marginTop: '0.75rem', fontSize: '0.825rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+            Apunta la cámara al <strong>código de barras o QR</strong> que el participante muestra en la pantalla de su celular o credencial.
           </p>
         </div>
       )}

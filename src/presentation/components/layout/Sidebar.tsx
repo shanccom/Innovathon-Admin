@@ -14,13 +14,6 @@ export const Sidebar: React.FC = () => {
     { id: 'comunicados', path: '/comunicados', label: 'Comunicados', icon: 'announcements' },
   ];
 
-  const configItem = {
-    id: 'configuracion',
-    path: '/configuracion',
-    label: 'Configuración',
-    icon: 'settings',
-  };
-
   const isCurrent = (path: string) => {
     if (path === '/') {
       return location.pathname === '/' || location.pathname === '';
@@ -65,22 +58,8 @@ export const Sidebar: React.FC = () => {
             </Link>
           ))}
         </div>
-
-        <div className="nav-divider"></div>
-
-        <div className="nav-section-label">Ajustes</div>
-        <div className="sidebar-links-stack">
-          <Link
-            to={configItem.path}
-            className={`nav-item ${isCurrent(configItem.path) ? 'active' : ''}`}
-          >
-            <span className="nav-item-icon">
-              <Icon name={configItem.icon} />
-            </span>
-            <span className="nav-item-label">{configItem.label}</span>
-          </Link>
-        </div>
       </nav>
+
 
       {/* Pie minimalista con acento cyber */}
       <div className="sidebar-footer">

@@ -157,23 +157,30 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
   });
 
   describe('Attendance Repository & Dynamic Sessions Use Case', () => {
-    it('should provide default 3 sessions and allow adding/deleting sessions', () => {
+    it('should provide default 6 sessions and allow adding/deleting sessions', () => {
       const repo = new LocalStorageAttendanceRepository();
       const useCase = new ManageAttendanceUseCase(repo);
 
       const sessions = useCase.getSessions();
-      expect(sessions).toHaveLength(3);
-      expect(sessions.map(s => s.name)).toEqual(['Asistencia 1', 'Asistencia 2', 'Asistencia 3']);
+      expect(sessions).toHaveLength(6);
+      expect(sessions.map(s => s.name)).toEqual([
+        'Asistencia 1',
+        'Asistencia 2',
+        'Asistencia 3',
+        'Asistencia 4',
+        'Asistencia 5',
+        'Asistencia 6',
+      ]);
 
-      // Add 4th session
+      // Add 7th session
       const newSession = useCase.addSession();
-      expect(newSession.name).toBe('Asistencia 4');
-      expect(useCase.getSessions()).toHaveLength(4);
+      expect(newSession.name).toBe('Asistencia 7');
+      expect(useCase.getSessions()).toHaveLength(7);
 
       // Delete session
       const deleted = useCase.deleteSession(newSession.id);
       expect(deleted).toBe(true);
-      expect(useCase.getSessions()).toHaveLength(3);
+      expect(useCase.getSessions()).toHaveLength(6);
     });
 
     it('should toggle attendance correctly and persist in storage', () => {

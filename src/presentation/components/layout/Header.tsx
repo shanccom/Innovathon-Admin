@@ -21,11 +21,8 @@ const ROUTE_BREADCRUMBS: Record<string, BreadcrumbItem[]> = {
     { label: 'Inicio', path: '/' },
     { label: 'Comunicados', path: '/comunicados' },
   ],
-  '/configuracion': [
-    { label: 'Inicio', path: '/' },
-    { label: 'Configuración', path: '/configuracion' },
-  ],
 };
+
 
 export const Header: React.FC = () => {
   const location = useLocation();

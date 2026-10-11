@@ -14,6 +14,7 @@ src/
 │   ├── models/              # Modelos (Participant, Attendance, Config, Stats)
 │   └── repositories/        # Interfaces/contratos de repositorios
 ├── infrastructure/          # Adaptadores e implementaciones externas
+│   ├── config/              # Configuración centralizada de endpoints (endpoints.config.ts)
 │   ├── repositories/        # Google Sheets GViz, localStorage, etc.
 │   └── state/               # Estado inicial y datos demostrativos
 ├── application/             # Casos de uso y hooks de React
@@ -21,7 +22,7 @@ src/
 │   └── hooks/               # useParticipants, useAttendance, useConfig
 ├── presentation/            # Capa visual (UI components y páginas)
 │   ├── components/          # Layout, Sidebar, Header, Icon, DesktopGate
-│   └── pages/               # Dashboard, Asistencias, Certificados, Comunicados, Configuración
+│   └── pages/               # Dashboard, Asistencias, Certificados, Comunicados
 └── assets/                  # Recursos estáticos centralizados
     ├── images/              # Logotipos e imágenes consolidadas
     ├── icons/               # Iconos y favicons en SVG
@@ -30,13 +31,40 @@ src/
 
 ---
 
+## Integración con Google Workspace (Apps Script & Sheets)
+
+Todos los endpoints y enlaces de Google Apps Script se configuran de manera centralizada en un único archivo:
+
+📁 **[`src/infrastructure/config/endpoints.config.ts`](file:///Users/sdhm/UNSA/trabajos/Innovathon-Admin/src/infrastructure/config/endpoints.config.ts)**
+
+En este archivo encontrarás:
+
+```typescript
+export const APPS_SCRIPT_ENDPOINTS = {
+  // 1. Asistencias: Lectura de «Registros» y marcado en matriz «Asistencias»
+  attendance: 'https://script.google.com/macros/s/AKfycbxCgXARqnJo7bVajPOLbDTbWhrjSDhlj4PBcV3b1xd8jF1jOBP4aERkpRRhC4IJMvsU4w/exec',
+
+  // 2. Certificados: Generación de PDFs en Google Drive y firmas
+  certificates: '',
+
+  // 3. Comunicados: Envíos masivos por correo vía Gmail API / MailApp
+  announcements: '',
+};
+
+export const GOOGLE_SHEETS_CONFIG = {
+  spreadsheetId: '1U48ftJJns3-4waJrt4A4uaI4OBNQoeyg1sOzzvXllI8',
+  sheetName: 'Registros',
+};
+```
+
+---
+
 ## Módulos principales
 
 1. **Panel Principal (Dashboard)**: Métricas operativas, sincronización en vivo con Google Sheets («Registros») y accesos directos.
-2. **Control de Asistencia** (`#/asistencias`): Registro de participantes, filtro en tiempo real, selector de jornada y conmutador de asistencia persistido.
+2. **Control de Asistencia** (`#/asistencias`): Registro de participantes, escáner de códigos de barras / QR, selector de jornada y conmutador de asistencia sincronizado en tiempo real con Google Sheets en formato matriz.
 3. **Gestión de Certificados** (`#/certificados`): Supervisión de estados del ciclo de certificación (pendiente de generación, firma digital, firmado y entregado).
 4. **Gestión de Comunicados** (`#/comunicados`): Redacción, filtros de destinatarios y registros de envíos masivos.
-5. **Configuración** (`#/configuracion`): Conexión con hoja de cálculo de Google Sheets, probador de conexión en vivo y guía para Google Apps Script.
 
 ---
 

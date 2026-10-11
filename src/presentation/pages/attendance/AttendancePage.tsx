@@ -7,6 +7,7 @@ import { Participant } from '../../../domain/models/participant.model';
 import { AttendanceSessionMap } from '../../../domain/models/attendance.model';
 import { Icon } from '../../components/common/Icon';
 import { QrCameraScanner } from '../../components/attendance/QrCameraScanner';
+import { SelfCheckinQrModal } from '../../components/attendance/SelfCheckinQrModal';
 import { playAudioFeedback } from '../../utils/audio';
 import { appsScriptAttendanceClient } from '../../../infrastructure/api/apps-script-attendance.client';
 
@@ -21,6 +22,7 @@ export const AttendancePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [scanCodeInput, setScanCodeInput] = useState<string>('');
   const [showCamera, setShowCamera] = useState<boolean>(false);
+  const [showQrModal, setShowQrModal] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [feedback, setFeedback] = useState<ScanFeedback | null>(null);
 
@@ -31,8 +33,6 @@ export const AttendancePage: React.FC = () => {
     sessions,
     activeSessionId,
     setActiveSessionId,
-    addSession,
-    deleteSession,
     clearSession,
     records,
     allRecords,
@@ -78,6 +78,27 @@ export const AttendancePage: React.FC = () => {
 
   const isConnected = status.state === 'connected';
   const hasError = status.state === 'error' && participants.length === 0;
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+
+  // Limpiar timer de feedback al desmontar
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current) {
+        clearTimeout(feedbackTimerRef.current);
+      }
+    };
+  }, []);
+
+  const triggerFeedback = (newFeedback: ScanFeedback) => {
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current);
+    }
+    setFeedback(newFeedback);
+    feedbackTimerRef.current = setTimeout(() => {
+      setFeedback(null);
+    }, 3000); // Se oculta automáticamente tras 3 segundos
+  };
 
   // Procesamiento del código escaneado o ingresado
   const handleProcessCode = (rawCode: string) => {
@@ -94,7 +115,7 @@ export const AttendancePage: React.FC = () => {
 
     if (!found) {
       if (soundEnabled) playAudioFeedback('error');
-      setFeedback({
+      triggerFeedback({
         type: 'error',
         message: `Código o DNI «${clean}» no encontrado en el padrón de participantes.`,
       });
@@ -105,7 +126,7 @@ export const AttendancePage: React.FC = () => {
     const existing = records[found.id];
     if (existing && existing.status === 'present') {
       if (soundEnabled) playAudioFeedback('warning');
-      setFeedback({
+      triggerFeedback({
         type: 'warning',
         message: `El participante ya registró asistencia en ${activeSession?.name || 'esta sesión'}.`,
         participant: found,
@@ -131,13 +152,14 @@ export const AttendancePage: React.FC = () => {
     });
 
     if (soundEnabled) playAudioFeedback('success');
-    setFeedback({
+    triggerFeedback({
       type: 'success',
       message: `¡Asistencia registrada con éxito!`,
       participant: found,
       timestamp: nowTime,
     });
   };
+
 
   const handleScanSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,74 +168,20 @@ export const AttendancePage: React.FC = () => {
     scanInputRef.current?.focus();
   };
 
-  const handleCreateSession = () => {
-    const defaultName = `Asistencia ${sessions.length + 1}`;
-    const name = window.prompt('Ingresa el nombre de la nueva sesión de asistencia:', defaultName);
-    if (name !== null) {
-      addSession(name.trim() || defaultName);
-    }
-  };
-
-  const handleDeleteCurrentSession = () => {
-    if (sessions.length <= 1) {
-      alert('Debe existir al menos una sesión de asistencia.');
-      return;
-    }
-    const confirmed = window.confirm(
-      `¿Estás seguro de eliminar "${activeSession?.name}"? Se perderán los registros de esta sesión.`
-    );
-    if (confirmed && activeSession) {
-      deleteSession(activeSession.id);
-    }
-  };
-
   const handleClearCurrentSession = () => {
     const confirmed = window.confirm(
-      `¿Deseas reiniciar todas las marcas de asistencia para "${activeSession?.name}"?`
+      `¿Deseas reiniciar todas las marcas de asistencia para "${activeSession?.name}"? Esto también limpiará la columna en Google Sheets.`
     );
     if (confirmed && activeSession) {
       clearSession(activeSession.id);
-      setFeedback(null);
-    }
-  };
-
-  const handleExportCSV = () => {
-    if (participants.length === 0) {
-      alert('No hay participantes registrados para exportar.');
-      return;
-    }
-
-    const headers = ['Código', 'DNI', 'Nombres y Apellidos', 'Equipo', 'Rol', ...sessions.map(s => s.name), 'Total Asistencias'];
-    const rows = participants.map(p => {
-      let count = 0;
-      const sessionCols = sessions.map(s => {
-        const rec = (allRecords as AttendanceSessionMap)[s.id]?.[p.id];
-        if (rec?.status === 'present') {
-          count++;
-          return rec.timestamp || 'Presente';
-        }
-        return 'Ausente';
+      appsScriptAttendanceClient.clearSessionColumn(activeSession.name, activeSession.id);
+      setFeedback({
+        type: 'warning',
+        message: `Se han reiniciado todas las marcas de "${activeSession.name}" en la web y en Google Sheets.`,
       });
-      return [
-        `"${p.codigo}"`,
-        `"${p.dni}"`,
-        `"${p.nombre}"`,
-        `"${p.equipo}"`,
-        `"${p.rol}"`,
-        ...sessionCols.map(c => `"${c}"`),
-        count,
-      ].join(',');
-    });
-
-    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `asistencias_innovathon_mollendo_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    }
   };
+
 
   return (
     <>
@@ -226,13 +194,20 @@ export const AttendancePage: React.FC = () => {
         </div>
         <div className="page-actions" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button
-            className="btn btn-secondary btn-sm"
+            className="btn btn-primary btn-sm"
             type="button"
-            onClick={handleExportCSV}
-            title="Descargar reporte completo en CSV / Excel"
+            onClick={() => setShowQrModal(true)}
+            style={{
+              background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+              border: 'none',
+              boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
+              color: '#FFFFFF',
+              fontWeight: 600,
+            }}
+            title="Mostrar o proyectar el código QR para que los participantes se registren con su celular"
           >
-            <Icon name="download" />
-            <span>Exportar CSV</span>
+            <Icon name="maximize" />
+            <span>Proyectar QR Auto Check-in</span>
           </button>
           <button
             className={`btn btn-secondary btn-sm ${loading ? 'spinning' : ''}`}
@@ -293,41 +268,20 @@ export const AttendancePage: React.FC = () => {
               </button>
             );
           })}
-          <button
-            type="button"
-            onClick={handleCreateSession}
-            className="btn btn-secondary btn-sm"
-            style={{ borderRadius: 'var(--radius-full)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-            title="Crear nueva sesión de asistencia (ej. Asistencia 4)"
-          >
-            <Icon name="plus" size={14} />
-            <span>Nueva sesión</span>
-          </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          {sessions.length > 1 && (
-            <button
-              type="button"
-              onClick={handleDeleteCurrentSession}
-              className="btn btn-secondary btn-sm"
-              style={{ color: '#dc2626', borderColor: '#fca5a5' }}
-              title={`Eliminar sesión "${activeSession?.name}"`}
-            >
-              <Icon name="trash" size={14} />
-              <span>Eliminar esta sesión</span>
-            </button>
-          )}
           <button
             type="button"
             onClick={handleClearCurrentSession}
             className="btn btn-secondary btn-sm"
-            title="Limpiar todas las asistencias marcadas en esta sesión"
+            title="Limpiar todas las marcas de asistencia para la sesión seleccionada"
           >
             <span>Reiniciar marcas</span>
           </button>
         </div>
       </div>
+
 
       {/* Módulo de Escaneo Rápido de Código y Cámara */}
       <div
@@ -377,85 +331,167 @@ export const AttendancePage: React.FC = () => {
               style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             >
               <Icon name="camera" size={16} />
-              <span>{showCamera ? 'Ocultar cámara' : 'Escanear con cámara QR'}</span>
+              <span>{showCamera ? 'Ocultar cámara' : 'Escanear con cámara (Barras)'}</span>
             </button>
           </div>
         </div>
 
-        {/* Cámara QR si está activa */}
+        {/* Lector de Código de Barras por cámara si está activo */}
         {showCamera && (
-          <QrCameraScanner
-            onScan={(code) => handleProcessCode(code)}
-            onClose={() => setShowCamera(false)}
-          />
+          <div style={{ marginBottom: '1.25rem' }}>
+            <QrCameraScanner
+              onScan={(code) => handleProcessCode(code)}
+              onClose={() => setShowCamera(false)}
+            />
+          </div>
         )}
 
-        {/* Input de escaneo rápido con autofocus */}
+        {/* Input de escaneo rápido estilo torniquete con autofocus continuo */}
         <form onSubmit={handleScanSubmit} style={{ display: 'flex', gap: '0.75rem' }}>
-          <div className="filter-input" style={{ flex: 1, padding: '0.8rem 1.1rem', borderColor: 'var(--color-purple)' }}>
-            <Icon name="qrCode" size={20} style={{ color: 'var(--color-purple)' }} />
+          <div
+            className="filter-input"
+            style={{
+              flex: 1,
+              padding: '0.85rem 1.25rem',
+              borderColor: 'var(--color-purple)',
+              boxShadow: '0 0 0 2px rgba(124, 58, 237, 0.1)',
+              backgroundColor: '#fff',
+            }}
+          >
+            <Icon name="qrCode" size={24} style={{ color: 'var(--color-purple)' }} />
             <input
               ref={scanInputRef}
               type="text"
-              placeholder="Escanear código con pistola USB o escribir Código / DNI y presionar Enter..."
+              placeholder="Escanea aquí con pistola USB o escribe Código / DNI y presiona Enter..."
               value={scanCodeInput}
               onChange={(e) => setScanCodeInput(e.target.value)}
-              style={{ fontSize: '1rem', fontWeight: 600 }}
+              style={{ fontSize: '1.05rem', fontWeight: 600 }}
+              autoComplete="off"
             />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ padding: '0 1.75rem' }}>
+          <button type="submit" className="btn btn-primary" style={{ padding: '0 2rem', fontSize: '0.95rem' }}>
             <span>Registrar</span>
           </button>
         </form>
 
-        {/* Tarjeta de Feedback Inmediato */}
+        {/* Banner Grande de Confirmación Rápida Estilo Universidad (Torniquete) */}
         {feedback && (
           <div
-            className={`alert-box ${
-              feedback.type === 'success'
-                ? 'alert-success'
-                : feedback.type === 'warning'
-                ? 'alert-warning'
-                : 'alert-error'
-            }`}
-            style={{ marginTop: '1.25rem' }}
+            style={{
+              marginTop: '1.25rem',
+              padding: '1.25rem 1.5rem',
+              borderRadius: 'var(--radius-lg)',
+              backgroundColor:
+                feedback.type === 'success'
+                  ? '#ecfdf5'
+                  : feedback.type === 'warning'
+                  ? '#fffbeb'
+                  : '#fef2f2',
+              border: `2px solid ${
+                feedback.type === 'success'
+                  ? '#10b981'
+                  : feedback.type === 'warning'
+                  ? '#f59e0b'
+                  : '#ef4444'
+              }`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '1.25rem',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+              animation: 'fadeIn 0.15s ease-in-out',
+            }}
           >
-            <Icon
-              name={feedback.type === 'success' ? 'check' : 'alertCircle'}
-              size={22}
-              style={{ flexShrink: 0 }}
-            />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 800, fontSize: '0.95rem' }}>{feedback.message}</div>
-              {feedback.participant && (
-                <div style={{ marginTop: '0.35rem', fontSize: '0.875rem', display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-                  <span>
-                    <strong>Participante:</strong> {feedback.participant.nombre}
-                  </span>
-                  <span>
-                    <strong>Código:</strong> <code>{feedback.participant.codigo}</code>
-                  </span>
-                  <span>
-                    <strong>DNI:</strong> <code>{feedback.participant.dni}</code>
-                  </span>
-                  <span>
-                    <strong>Equipo:</strong> {feedback.participant.equipo}
-                  </span>
-                  {feedback.timestamp && (
-                    <span>
-                      <strong>Hora de registro:</strong> {feedback.timestamp}
-                    </span>
-                  )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '50%',
+                  backgroundColor:
+                    feedback.type === 'success'
+                      ? '#10b981'
+                      : feedback.type === 'warning'
+                      ? '#f59e0b'
+                      : '#ef4444',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <Icon
+                  name={feedback.type === 'success' ? 'check' : 'alertCircle'}
+                  size={28}
+                />
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <div
+                  style={{
+                    fontSize: '1.15rem',
+                    fontWeight: 800,
+                    color:
+                      feedback.type === 'success'
+                        ? '#065f46'
+                        : feedback.type === 'warning'
+                        ? '#92400e'
+                        : '#991b1b',
+                  }}
+                >
+                  {feedback.message}
                 </div>
-              )}
+
+                {feedback.participant && (
+                  <div
+                    style={{
+                      marginTop: '0.35rem',
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '1.25rem',
+                      fontSize: '0.925rem',
+                      color: 'var(--color-midnight)',
+                    }}
+                  >
+                    <span>
+                      <strong>Estudiante:</strong>{' '}
+                      <span style={{ fontSize: '1rem', fontWeight: 700 }}>
+                        {feedback.participant.nombre}
+                      </span>
+                    </span>
+                    <span>
+                      <strong>Código:</strong>{' '}
+                      <code style={{ fontSize: '0.95rem', color: 'var(--color-purple)', fontWeight: 700 }}>
+                        {feedback.participant.codigo}
+                      </code>
+                    </span>
+                    <span>
+                      <strong>DNI:</strong> <code>{feedback.participant.dni}</code>
+                    </span>
+                    {feedback.timestamp && (
+                      <span>
+                        <strong>Hora:</strong> {feedback.timestamp}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
+
             <button
               type="button"
               onClick={() => setFeedback(null)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: '0.2rem' }}
-              title="Cerrar aviso"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--text-muted)',
+                padding: '0.5rem',
+              }}
+              title="Cerrar notificación"
             >
-              <Icon name="x" size={16} />
+              <Icon name="x" size={20} />
             </button>
           </div>
         )}
@@ -474,7 +510,7 @@ export const AttendancePage: React.FC = () => {
           <div>
             <div className="status-step-title">Inscritos en «Registros»</div>
             <div className="status-step-count" id="count-total">
-              {isConnected ? totalCount : '—'}
+              {loading && participants.length === 0 ? '...' : totalCount > 0 ? totalCount : isConnected ? 0 : '—'}
             </div>
           </div>
         </div>
@@ -549,10 +585,6 @@ export const AttendancePage: React.FC = () => {
                 justifyContent: 'center',
               }}
             >
-              <Link to="/configuracion" className="btn btn-primary btn-sm">
-                <Icon name="settings" />
-                <span>Ver instrucciones de conexión</span>
-              </Link>
               <a
                 href={getSpreadsheetUrl()}
                 target="_blank"
@@ -592,8 +624,8 @@ export const AttendancePage: React.FC = () => {
                   <th>Código</th>
                   <th>DNI / Identificación</th>
                   <th>Participante</th>
-                  <th>Equipo / Proyecto</th>
-                  <th>Hora de Entrada ({activeSession?.name})</th>
+                  <th>Hora ({activeSession?.name})</th>
+                  <th style={{ textAlign: 'center' }}>Total Asistencias</th>
                   <th>Estado</th>
                   <th style={{ textAlign: 'right' }}>Acción</th>
                 </tr>
@@ -602,6 +634,11 @@ export const AttendancePage: React.FC = () => {
                 {filteredParticipants.map((p) => {
                   const att = records[p.id];
                   const isPresent = att && att.status === 'present';
+
+                  // Calcular total de asistencias acumuladas en todas las sesiones
+                  const totalAsistenciasParticipant = sessions.filter(
+                    (s) => (allRecords as AttendanceSessionMap)[s.id]?.[p.id]?.status === 'present'
+                  ).length;
 
                   return (
                     <tr key={p.id}>
@@ -619,8 +656,27 @@ export const AttendancePage: React.FC = () => {
                           {p.correo !== '—' ? p.correo : p.rol}
                         </small>
                       </td>
-                      <td>{p.equipo}</td>
                       <td>{isPresent ? att.timestamp : '—'}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            minWidth: '28px',
+                            height: '24px',
+                            padding: '0 8px',
+                            borderRadius: '12px',
+                            fontSize: '0.85rem',
+                            fontWeight: 700,
+                            backgroundColor: totalAsistenciasParticipant > 0 ? '#ecfdf5' : 'var(--bg-card)',
+                            color: totalAsistenciasParticipant > 0 ? '#047857' : 'var(--text-muted)',
+                            border: `1px solid ${totalAsistenciasParticipant > 0 ? '#a7f3d0' : 'var(--border-light)'}`,
+                          }}
+                        >
+                          {totalAsistenciasParticipant} / {sessions.length}
+                        </span>
+                      </td>
                       <td>
                         {isPresent ? (
                           <span className="badge-live">Presente</span>
@@ -640,7 +696,6 @@ export const AttendancePage: React.FC = () => {
                               codigo: p.codigo,
                               dni: p.dni,
                               nombre: p.nombre,
-                              equipo: p.equipo,
                               sessionId: activeSessionId,
                               sessionName: activeSession?.name || 'Asistencia 1',
                               timestamp: nextStatus === 'present' ? nowTime : '',
@@ -658,6 +713,15 @@ export const AttendancePage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal para Proyectar / Compartir el Código QR de Auto Check-in */}
+      <SelfCheckinQrModal
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        activeSessionId={activeSessionId}
+        sessions={sessions}
+        onSelectSession={(id) => setActiveSessionId(id)}
+      />
     </>
   );
 };
