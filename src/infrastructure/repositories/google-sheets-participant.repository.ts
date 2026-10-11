@@ -120,7 +120,11 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
     // 1. Apps Script Web App (if configured)
     if (config.appsScriptUrl && config.appsScriptUrl.trim()) {
       try {
-        const res = await fetch(config.appsScriptUrl.trim(), {
+        const rawUrl = config.appsScriptUrl.trim();
+        const separator = rawUrl.includes('?') ? '&' : '?';
+        const urlWithAction = rawUrl.includes('action=') ? rawUrl : `${rawUrl}${separator}action=data`;
+
+        const res = await fetch(urlWithAction, {
           method: 'GET',
           mode: 'cors',
         });
@@ -130,21 +134,23 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
             ? json
             : json.data || json.rows || [];
           const validRows = rows.filter(r => this.isParticipantRow(r));
-          const normalized = this.normalizeRows(validRows);
-          this.cachedData = normalized;
-          this.lastStatus = {
-            state: 'connected',
-            message: 'Sincronizado vía Apps Script Web App',
-            count: normalized.length,
-            timestamp: Date.now(),
-          };
-          this.saveCache(normalized);
-          return {
-            success: true,
-            data: normalized,
-            count: normalized.length,
-            status: this.lastStatus,
-          };
+          if (validRows.length > 0 || (json.success === true && Array.isArray(json.data))) {
+            const normalized = this.normalizeRows(validRows);
+            this.cachedData = normalized;
+            this.lastStatus = {
+              state: 'connected',
+              message: `Sincronizado vía Apps Script Web App (${normalized.length} participantes)`,
+              count: normalized.length,
+              timestamp: Date.now(),
+            };
+            this.saveCache(normalized);
+            return {
+              success: true,
+              data: normalized,
+              count: normalized.length,
+              status: this.lastStatus,
+            };
+          }
         }
       } catch (err) {
         console.warn('Fallo al conectar con Apps Script Web App:', err);
