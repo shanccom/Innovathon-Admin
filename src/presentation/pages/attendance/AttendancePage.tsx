@@ -18,6 +18,7 @@ interface ScanFeedback {
 
 export const AttendancePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'present' | 'pending'>('all');
   const [scanCodeInput, setScanCodeInput] = useState<string>('');
   const [showQrModal, setShowQrModal] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<ScanFeedback | null>(null);
@@ -52,16 +53,25 @@ export const AttendancePage: React.FC = () => {
 
   const filteredParticipants = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return participants;
-    return participants.filter(
-      (p) =>
+    return participants.filter((p) => {
+      // Filtro de texto
+      const matchesSearch =
+        !q ||
         p.codigo.toLowerCase().includes(q) ||
         p.dni.toLowerCase().includes(q) ||
         p.nombre.toLowerCase().includes(q) ||
         p.equipo.toLowerCase().includes(q) ||
-        p.correo.toLowerCase().includes(q)
-    );
-  }, [participants, searchQuery]);
+        p.correo.toLowerCase().includes(q);
+
+      if (!matchesSearch) return false;
+
+      // Filtro de estado por clic en tarjetas
+      const isPresent = records[p.id]?.status === 'present';
+      if (statusFilter === 'present') return isPresent;
+      if (statusFilter === 'pending') return !isPresent;
+      return true;
+    });
+  }, [participants, searchQuery, statusFilter, records]);
 
   const presentCount = useMemo(() => {
     return participants.filter((p) => records[p.id]?.status === 'present').length;
@@ -548,52 +558,151 @@ export const AttendancePage: React.FC = () => {
         )}
       </div>
 
-      {/* Indicadores de Asistencia de la Sesión Activa */}
+      {/* Indicadores Compactos y Funcionales (Filtran la tabla al hacer clic) */}
       <div
-        className="status-cards-row"
-        style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '1.5rem' }}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '0.75rem',
+          marginBottom: '1.25rem',
+        }}
         id="attendance-counters"
       >
-        <div className="status-step-card">
-          <div className="status-step-icon pending">
-            <Icon name="users" />
-          </div>
-          <div>
-            <div className="status-step-title">Inscritos en «Registros»</div>
-            <div className="status-step-count" id="count-total">
-              {loading && participants.length === 0 ? '...' : totalCount > 0 ? totalCount : isConnected ? 0 : '—'}
+        {/* Tarjeta: Total Inscritos */}
+        <div
+          onClick={() => setStatusFilter('all')}
+          style={{
+            backgroundColor: statusFilter === 'all' ? '#F8FAFC' : '#FFFFFF',
+            border: `1.5px solid ${statusFilter === 'all' ? '#4F46E5' : '#E2E8F0'}`,
+            borderRadius: '12px',
+            padding: '0.75rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: statusFilter === 'all' ? '0 2px 4px rgba(79, 70, 229, 0.08)' : 'none',
+          }}
+          title="Ver todos los participantes"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor: '#F1F5F9',
+                color: '#475569',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name="users" size={16} />
             </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                Total Inscritos
+              </div>
+              <div style={{ fontSize: '0.75rem', color: statusFilter === 'all' ? '#4F46E5' : '#94A3B8' }}>
+                {statusFilter === 'all' ? 'Mostrando todos' : 'Clic para filtrar'}
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', lineHeight: 1 }}>
+            {loading && participants.length === 0 ? '...' : totalCount}
           </div>
         </div>
 
-        <div className="status-step-card">
-          <div
-            className="status-step-icon"
-            style={{
-              backgroundColor: '#ecfdf5',
-              color: '#047857',
-              border: '1px solid #a7f3d0',
-            }}
-          >
-            <Icon name="checkCircle" />
-          </div>
-          <div>
-            <div className="status-step-title">Presentes en {activeSession?.name}</div>
-            <div className="status-step-count" id="count-present">
-              {isConnected ? presentCount : 0}
+        {/* Tarjeta: Presentes */}
+        <div
+          onClick={() => setStatusFilter(statusFilter === 'present' ? 'all' : 'present')}
+          style={{
+            backgroundColor: statusFilter === 'present' ? '#F0FDF4' : '#FFFFFF',
+            border: `1.5px solid ${statusFilter === 'present' ? '#16A34A' : '#E2E8F0'}`,
+            borderRadius: '12px',
+            padding: '0.75rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: statusFilter === 'present' ? '0 2px 4px rgba(22, 163, 74, 0.08)' : 'none',
+          }}
+          title="Filtrar solo participantes con asistencia marcada"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor: '#DCFCE7',
+                color: '#16A34A',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name="checkCircle" size={16} />
             </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#16A34A', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                Presentes ({activeSession?.name})
+              </div>
+              <div style={{ fontSize: '0.75rem', color: statusFilter === 'present' ? '#16A34A' : '#94A3B8' }}>
+                {statusFilter === 'present' ? 'Filtro activo' : 'Clic para filtrar'}
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#16A34A', lineHeight: 1 }}>
+            {presentCount}
           </div>
         </div>
 
-        <div className="status-step-card">
-          <div className="status-step-icon pending">
-            <Icon name="clock" />
-          </div>
-          <div>
-            <div className="status-step-title">Pendientes en {activeSession?.name}</div>
-            <div className="status-step-count" id="count-pending">
-              {isConnected ? pendingCount : '—'}
+        {/* Tarjeta: Pendientes */}
+        <div
+          onClick={() => setStatusFilter(statusFilter === 'pending' ? 'all' : 'pending')}
+          style={{
+            backgroundColor: statusFilter === 'pending' ? '#FFFBEB' : '#FFFFFF',
+            border: `1.5px solid ${statusFilter === 'pending' ? '#D97706' : '#E2E8F0'}`,
+            borderRadius: '12px',
+            padding: '0.75rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: statusFilter === 'pending' ? '0 2px 4px rgba(217, 119, 6, 0.08)' : 'none',
+          }}
+          title="Filtrar participantes que aún no registran asistencia"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor: '#FEF3C7',
+                color: '#D97706',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name="clock" size={16} />
             </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                Pendientes ({activeSession?.name})
+              </div>
+              <div style={{ fontSize: '0.75rem', color: statusFilter === 'pending' ? '#D97706' : '#94A3B8' }}>
+                {statusFilter === 'pending' ? 'Filtro activo' : 'Clic para filtrar'}
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#D97706', lineHeight: 1 }}>
+            {pendingCount}
           </div>
         </div>
       </div>
