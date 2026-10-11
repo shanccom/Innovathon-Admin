@@ -5,6 +5,7 @@ export interface Participant {
   nombre: string;
   equipo: string;
   correo: string;
+  correoInstitucional?: string;
   celular: string;
   rol: string;
   estado: string;

@@ -81,6 +81,7 @@ export function useAnnouncements() {
         primerNombre,
         apellido: '',
         correo: p.correo,
+        correoInstitucional: p.correoInstitucional,
         equipo: p.equipo,
         rol: p.rol,
         estado: p.estado,
@@ -117,8 +118,9 @@ export function useAnnouncements() {
         const matchesName = r.nombre.toLowerCase().includes(q);
         const matchesDni = r.dni.toLowerCase().includes(q);
         const matchesEmail = r.correo.toLowerCase().includes(q);
+        const matchesInstEmail = r.correoInstitucional ? r.correoInstitucional.toLowerCase().includes(q) : false;
         const matchesTeam = r.equipo.toLowerCase().includes(q);
-        if (!matchesName && !matchesDni && !matchesEmail && !matchesTeam) return false;
+        if (!matchesName && !matchesDni && !matchesEmail && !matchesInstEmail && !matchesTeam) return false;
       }
 
       return true;

@@ -86,7 +86,12 @@ export function renderTemplate(template: string, recipient: AnnouncementRecipien
         break;
       case 'correo':
       case 'email':
+      case 'correo_personal':
         resolvedValue = recipient.correo && recipient.correo !== '—' ? recipient.correo : '';
+        break;
+      case 'correo_institucional':
+      case 'institucional':
+        resolvedValue = recipient.correoInstitucional || '';
         break;
       case 'rol':
       case 'categoria':

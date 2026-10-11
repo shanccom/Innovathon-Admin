@@ -5,6 +5,7 @@ export interface AnnouncementRecipient {
   primerNombre: string;
   apellido: string;
   correo: string;
+  correoInstitucional?: string;
   equipo: string;
   rol: string;
   estado: string;

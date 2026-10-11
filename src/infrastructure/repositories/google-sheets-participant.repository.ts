@@ -67,11 +67,19 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
 
     const dniKey = findKey('dni', 'documento', 'identificacion', 'cedula');
     const nameKey = findKey('nombre', 'participante');
-    const correoKey = findKey('correo', 'email', 'mail');
+    const personalEmailKey = findKey('correo personal', 'email personal', 'personal');
+    const institutionalEmailKey = findKey('correo institucional', 'email institucional', 'institucional');
+    const genericEmailKey = findKey('correo', 'email', 'mail');
 
     const hasVal = (k?: string) =>
       Boolean(k && row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '');
-    return hasVal(dniKey) || hasVal(nameKey) || hasVal(correoKey);
+    return (
+      hasVal(dniKey) ||
+      hasVal(nameKey) ||
+      hasVal(personalEmailKey) ||
+      hasVal(institutionalEmailKey) ||
+      hasVal(genericEmailKey)
+    );
   }
 
   async fetchParticipants(forceRefresh = false): Promise<ParticipantFetchResult> {
@@ -294,9 +302,23 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
       const apellidosKey = findKey('apellidos', 'apellido');
 
       const equipoKey = findKey('equipo', 'proyecto', 'team', 'grupo', 'reto', 'eje', 'institucion');
-      const correoKey = findKey('correo', 'email', 'mail');
+      // Priorizar explícitamente el Correo Personal (obligatorio para la postulación y comunicación)
+      const personalEmailKey = findKey('correo personal', 'email personal', 'personal');
+      const institutionalEmailKey = findKey('correo institucional', 'email institucional', 'institucional');
+      const genericEmailKey = findKey('correo', 'email', 'mail');
       const celularKey = findKey('celular', 'telefono', 'whatsapp', 'movil');
       const rolKey = findKey('rol', 'categoria', 'tipo', 'modalidad');
+
+      const getVal = (k?: string) =>
+        k && row[k] !== undefined && row[k] !== null ? String(row[k]).trim() : '';
+
+      const correoPersonal = getVal(personalEmailKey);
+      const correoInstitucional = getVal(institutionalEmailKey);
+      const correoGenerico = getVal(genericEmailKey);
+
+      // El correo prioritario para notificaciones y comunicados es el Personal (obligatorio),
+      // con fallback a Institucional o Genérico si no tuviera correo personal.
+      const correoFinal = correoPersonal || correoInstitucional || correoGenerico || '—';
 
       let nombre = '';
       if (fullCombinedKey && row[fullCombinedKey]) {
@@ -319,7 +341,8 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
         dni: dniKey && row[dniKey] ? String(row[dniKey]).trim() : '—',
         nombre: nombre.trim(),
         equipo: equipoKey && row[equipoKey] ? String(row[equipoKey]).trim() : 'Sin equipo asignado',
-        correo: correoKey && row[correoKey] ? String(row[correoKey]).trim() : '—',
+        correo: correoFinal,
+        correoInstitucional: correoInstitucional || undefined,
         celular: celularKey && row[celularKey] ? String(row[celularKey]).trim() : '—',
         rol: rolKey && row[rolKey] ? String(row[rolKey]).trim() : 'Participante',
         estado: 'Registrado',

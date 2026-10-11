@@ -88,6 +88,36 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
       expect(result[0].rol).toBe('Participante');
     });
 
+    it('should prioritize "Correo personal" over "Correo institucional"', () => {
+      const rows = [
+        {
+          'DNI': '72819203',
+          'Nombres y Apellidos': 'Carlos Benavides',
+          'Correo institucional': 'carlos@unsa.edu.pe',
+          'Correo personal': 'carlos.personal@gmail.com',
+        },
+      ];
+
+      const result = repo.normalizeRows(rows);
+      expect(result[0].correo).toBe('carlos.personal@gmail.com');
+      expect(result[0].correoInstitucional).toBe('carlos@unsa.edu.pe');
+    });
+
+    it('should fallback to "Correo institucional" if "Correo personal" is empty', () => {
+      const rows = [
+        {
+          'DNI': '72819203',
+          'Nombres y Apellidos': 'Carlos Benavides',
+          'Correo institucional': 'carlos@unsa.edu.pe',
+          'Correo personal': '',
+        },
+      ];
+
+      const result = repo.normalizeRows(rows);
+      expect(result[0].correo).toBe('carlos@unsa.edu.pe');
+      expect(result[0].correoInstitucional).toBe('carlos@unsa.edu.pe');
+    });
+
     it('should distinguish real participant rows from stray cells', () => {
       // Row with only an unrelated number in a random column
       const strayRow = { 'Nivel académico': 12 };

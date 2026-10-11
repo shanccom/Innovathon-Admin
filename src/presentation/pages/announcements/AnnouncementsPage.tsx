@@ -642,7 +642,14 @@ export const AnnouncementsPage: React.FC = () => {
                         </td>
                         <td>
                           {r.correo !== '—' ? (
-                            <span style={{ fontSize: '0.85rem' }}>{r.correo}</span>
+                            <div>
+                              <span style={{ fontSize: '0.85rem' }}>{r.correo}</span>
+                              {r.correoInstitucional && r.correoInstitucional !== r.correo && (
+                                <small style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                  {r.correoInstitucional}
+                                </small>
+                              )}
+                            </div>
                           ) : (
                             <span className="badge-demo" style={{ color: '#b91c1c' }}>Sin correo</span>
                           )}
