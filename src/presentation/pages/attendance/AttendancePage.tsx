@@ -205,48 +205,127 @@ export const AttendancePage: React.FC = () => {
 
   return (
     <>
-      <div className="page-header-row">
-        <div>
-          <h1 className="page-title">Control de asistencia</h1>
-          <p className="page-subtitle">
-            Escanea el código del participante o regístralo manualmente para cada una de las sesiones.
-          </p>
-        </div>
-        <div className="page-actions" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button
-            className="btn btn-primary btn-sm"
-            type="button"
-            onClick={() => setShowQrModal(true)}
-            style={{
-              background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
-              border: 'none',
-              boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
-              color: '#FFFFFF',
-              fontWeight: 600,
-            }}
-            title="Mostrar o proyectar el código QR para que los participantes se registren con su celular"
-          >
-            <Icon name="maximize" />
-            <span>Proyectar QR Auto Check-in</span>
-          </button>
-          <button
-            className={`btn btn-secondary btn-sm ${loading ? 'spinning' : ''}`}
-            id="btn-refresh-attendance"
-            type="button"
-            onClick={() => refresh()}
-            disabled={loading}
-          >
-            <Icon name="refresh" />
-            <span>Actualizar registros</span>
-          </button>
-          <Link to="/" className="btn btn-secondary btn-sm">
-            <Icon name="arrowLeft" />
-            <span>Volver al panel</span>
-          </Link>
+      {/* Hero Header Ejecutivo y Minimalista */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #070a18 0%, #0f172a 100%)',
+          borderRadius: '24px',
+          padding: '2rem 2.25rem',
+          color: '#ffffff',
+          marginBottom: '1.75rem',
+          boxShadow: '0 20px 30px -10px rgba(7, 10, 24, 0.4)',
+          border: '1px solid #1e293b',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1.5rem',
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                backgroundColor: 'rgba(203, 251, 69, 0.15)',
+                color: '#cbfb45',
+                padding: '0.35rem 0.85rem',
+                borderRadius: '9999px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                marginBottom: '0.75rem',
+                border: '1px solid rgba(203, 251, 69, 0.3)',
+              }}
+            >
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#cbfb45' }} />
+              Innovathon 2026 • Asistencia en Vivo
+            </div>
+            <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#ffffff', margin: 0, letterSpacing: '-0.02em' }}>
+              Control de Asistencias
+            </h1>
+            <p style={{ margin: '0.4rem 0 0', fontSize: '0.925rem', color: '#94a3b8', maxWidth: '600px' }}>
+              Proyecta el QR para que los participantes se registren con su celular o márcalos al instante con su DNI.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setShowQrModal(true)}
+              style={{
+                backgroundColor: '#cbfb45',
+                color: '#070a18',
+                border: 'none',
+                padding: '0.85rem 1.4rem',
+                borderRadius: '14px',
+                fontWeight: 800,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                boxShadow: '0 0 25px rgba(203, 251, 69, 0.35)',
+                transition: 'transform 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+              title="Abre el cartel QR gigante para proyectarlo o imprimirlo"
+            >
+              <Icon name="maximize" size={20} />
+              <span>Proyectar QR Auto Check-in</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => refresh()}
+              disabled={loading}
+              className={`btn btn-secondary ${loading ? 'spinning' : ''}`}
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                color: '#f8fafc',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '14px',
+                padding: '0.85rem 1.25rem',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+              }}
+            >
+              <Icon name="refresh" size={18} />
+              <span>Actualizar</span>
+            </button>
+
+            <Link
+              to="/"
+              className="btn btn-secondary"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                color: '#f8fafc',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '14px',
+                padding: '0.85rem 1.25rem',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+              }}
+            >
+              <Icon name="arrowLeft" size={18} />
+              <span>Panel</span>
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Selector y Gestión Dinámica de Sesiones de Asistencia */}
+      {/* Selector de Sesiones Estilo Pill Moderno */}
       <div
         style={{
           display: 'flex',
@@ -254,17 +333,17 @@ export const AttendancePage: React.FC = () => {
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: '1rem',
-          backgroundColor: 'var(--bg-surface)',
+          backgroundColor: '#ffffff',
           padding: '0.85rem 1.25rem',
-          borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border-light)',
+          borderRadius: '16px',
+          border: '1px solid #e2e8f0',
           marginBottom: '1.5rem',
-          boxShadow: 'var(--shadow-sm)',
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-midnight)', marginRight: '0.25rem' }}>
-            Sesión activa:
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Sesión:
           </span>
           {sessions.map((s) => {
             const isActive = s.id === activeSessionId;
@@ -276,12 +355,16 @@ export const AttendancePage: React.FC = () => {
                   setActiveSessionId(s.id);
                   setFeedback(null);
                 }}
-                className={`btn btn-sm ${isActive ? 'btn-primary' : 'btn-secondary'}`}
                 style={{
-                  borderRadius: 'var(--radius-full)',
-                  padding: '0.4rem 1rem',
-                  fontSize: '0.825rem',
-                  borderColor: isActive ? 'var(--color-purple)' : 'var(--border-medium)',
+                  padding: '0.45rem 1.1rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.85rem',
+                  fontWeight: isActive ? 700 : 500,
+                  cursor: 'pointer',
+                  border: isActive ? '2px solid #4f46e5' : '1px solid #e2e8f0',
+                  backgroundColor: isActive ? '#eef2ff' : '#f8fafc',
+                  color: isActive ? '#4338ca' : '#475569',
+                  transition: 'all 0.15s ease',
                 }}
               >
                 {s.name}
@@ -294,24 +377,32 @@ export const AttendancePage: React.FC = () => {
           <button
             type="button"
             onClick={handleClearCurrentSession}
-            className="btn btn-secondary btn-sm"
-            title="Limpiar todas las marcas de asistencia para la sesión seleccionada"
+            style={{
+              padding: '0.45rem 0.9rem',
+              borderRadius: '10px',
+              border: '1px solid #fee2e2',
+              backgroundColor: '#fff5f5',
+              color: '#dc2626',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+            title="Reiniciar asistencias de la sesión activa"
           >
-            <span>Reiniciar marcas</span>
+            Reiniciar marcas
           </button>
         </div>
       </div>
 
-
-      {/* Módulo de Escaneo Rápido de Código y Cámara */}
+      {/* Tarjeta de Registro Manual Rápido (Minimalista y Clara) */}
       <div
         style={{
-          backgroundColor: 'var(--bg-surface)',
-          borderRadius: 'var(--radius-xl)',
-          border: '1px solid var(--border-light)',
+          backgroundColor: '#ffffff',
+          borderRadius: '20px',
+          border: '1px solid #e2e8f0',
           padding: '1.5rem',
           marginBottom: '1.75rem',
-          boxShadow: 'var(--shadow-sm)',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.04)',
         }}
       >
         <div
@@ -325,53 +416,85 @@ export const AttendancePage: React.FC = () => {
           }}
         >
           <div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-midnight)', margin: 0 }}>
-              Registro de Asistencia: <span style={{ color: 'var(--color-purple)' }}>{activeSession?.name}</span>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+              Registro Directo • <span style={{ color: '#4f46e5' }}>{activeSession?.name}</span>
             </h2>
-            <p style={{ margin: '0.2rem 0 0', fontSize: '0.825rem', color: 'var(--text-muted)' }}>
-              Ingresa el DNI o Código del participante (con lector de mano o teclado)
+            <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+              Digita el DNI o Código del participante y presiona Enter
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <button
-              type="button"
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className="btn btn-secondary btn-sm"
-              title={soundEnabled ? 'Sonido activado' : 'Sonido silenciado'}
-              style={{ opacity: soundEnabled ? 1 : 0.55 }}
-            >
-              <Icon name="volume2" size={16} />
-              <span>{soundEnabled ? 'Sonido ON' : 'Sonido OFF'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Input de escaneo rápido estilo torniquete con autofocus continuo */}
-        <form onSubmit={handleScanSubmit} style={{ display: 'flex', gap: '0.75rem' }}>
-          <div
-            className="filter-input"
+          <button
+            type="button"
+            onClick={() => setSoundEnabled(!soundEnabled)}
             style={{
-              flex: 1,
-              padding: '0.85rem 1.25rem',
-              borderColor: 'var(--color-purple)',
-              boxShadow: '0 0 0 2px rgba(124, 58, 237, 0.1)',
-              backgroundColor: '#fff',
+              padding: '0.4rem 0.85rem',
+              borderRadius: '9999px',
+              border: '1px solid #e2e8f0',
+              backgroundColor: soundEnabled ? '#f0fdf4' : '#f8fafc',
+              color: soundEnabled ? '#15803d' : '#64748b',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              cursor: 'pointer',
             }}
           >
-            <Icon name="attendance" size={24} style={{ color: 'var(--color-purple)' }} />
+            <Icon name="volume2" size={14} />
+            <span>{soundEnabled ? 'Sonido Activado' : 'Silenciado'}</span>
+          </button>
+        </div>
+
+        {/* Input de Registro */}
+        <form onSubmit={handleScanSubmit} style={{ display: 'flex', gap: '0.75rem' }}>
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: '#f8fafc',
+              border: '2px solid #e2e8f0',
+              borderRadius: '14px',
+              padding: '0.75rem 1.25rem',
+              gap: '0.75rem',
+              transition: 'border-color 0.15s ease',
+            }}
+          >
+            <Icon name="attendance" size={22} style={{ color: '#4f46e5' }} />
             <input
               ref={scanInputRef}
               type="text"
-              placeholder="Escribe DNI o Código (ej. 72859994 o IM-2026-0003) y presiona Enter..."
+              placeholder="Ingresa DNI (ej. 72859994) o Código (ej. IM-2026-0003)..."
               value={scanCodeInput}
               onChange={(e) => setScanCodeInput(e.target.value)}
-              style={{ fontSize: '1.05rem', fontWeight: 600 }}
+              style={{
+                width: '100%',
+                border: 'none',
+                background: 'transparent',
+                fontSize: '1.05rem',
+                fontWeight: 600,
+                color: '#0f172a',
+                outline: 'none',
+              }}
               autoComplete="off"
             />
           </div>
-          <button type="submit" className="btn btn-primary" style={{ padding: '0 2rem', fontSize: '0.95rem' }}>
-            <span>Registrar</span>
+          <button
+            type="submit"
+            style={{
+              padding: '0 1.75rem',
+              backgroundColor: '#4f46e5',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '14px',
+              fontWeight: 700,
+              fontSize: '0.95rem',
+              cursor: 'pointer',
+              boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)',
+            }}
+          >
+            Registrar
           </button>
         </form>
 
