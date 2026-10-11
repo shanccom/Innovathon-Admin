@@ -68,13 +68,26 @@ export const SelfCheckinPage: React.FC = () => {
     setSubmitting(true);
     setResult(null);
 
-    const docBuscado = normalizarDoc(clean);
+    let cleanDoc = clean;
+    if (cleanDoc.includes('?') || cleanDoc.includes('/')) {
+      const urlCodeMatch = cleanDoc.match(/[?&](?:code|codigo|dni|id)=([A-Za-z0-9_-]+)/i);
+      if (urlCodeMatch && urlCodeMatch[1]) {
+        cleanDoc = urlCodeMatch[1].trim().toUpperCase();
+      } else {
+        const pathPartMatch = cleanDoc.match(/(IM-\d{4}-\d+|[0-9]{8})/i);
+        if (pathPartMatch && pathPartMatch[1]) {
+          cleanDoc = pathPartMatch[1].trim().toUpperCase();
+        }
+      }
+    }
+
+    const docBuscado = normalizarDoc(cleanDoc);
 
     // 1. Validar que exista en el padrón de participantes (Registros)
     const found = participants.find((p) => {
       const pDni = normalizarDoc(p.dni);
       const pCod = p.codigo.trim().toUpperCase();
-      return pDni === docBuscado || pCod === clean || p.id.toLowerCase() === clean.toLowerCase();
+      return pDni === docBuscado || pCod === cleanDoc || p.id.toLowerCase() === cleanDoc.toLowerCase();
     });
 
     if (!found) {

@@ -31,26 +31,29 @@ export const QrCameraScanner: React.FC<QrCameraScannerProps> = ({ onScan, onClos
         // Limpiar contenido previo si quedó algún video o canvas residual
         container.innerHTML = '';
 
-        // Configuración especializada 100% en CÓDIGO DE BARRAS (Pase de acreditación CODE_128)
+        // Soporte universal: Códigos QR y Códigos de Barras (CODE_128, CODE_39, EAN_13)
         html5QrCode = new Html5Qrcode(containerId, {
           formatsToSupport: [
-            Html5QrcodeSupportedFormats.CODE_128, // Formato exacto del correo: IM-2026-XXXX
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.CODE_128,
             Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.UPC_A,
           ],
           verbose: false,
         });
         scannerRef.current = html5QrCode;
 
-        // Visor rectangular horizontal específico para capturar las barras del celular de punta a punta
+        // Visor adaptable: suficiente altura para QRs cuadrados y anchura para códigos de barras
         const config = {
           fps: 25, // Máxima velocidad de muestreo
           qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-            const width = Math.min(Math.floor(viewfinderWidth * 0.90), 380);
-            const height = Math.min(130, viewfinderHeight - 30); // Ventana estrecha de barras
-            return { width: Math.max(width, 280), height: Math.max(height, 110) };
+            const edge = Math.min(viewfinderWidth, viewfinderHeight);
+            const size = Math.max(Math.floor(edge * 0.75), 240);
+            return { width: size, height: size };
           },
           experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true, // Motor nativo de código de barras de Chrome/Edge/Safari
+            useBarCodeDetectorIfSupported: true, // Motor nativo de código de barras / QR si el navegador lo soporta
           },
         };
 

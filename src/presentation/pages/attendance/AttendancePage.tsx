@@ -102,16 +102,40 @@ export const AttendancePage: React.FC = () => {
 
   // Procesamiento del código escaneado o ingresado
   const handleProcessCode = (rawCode: string) => {
-    const clean = rawCode.trim();
+    let clean = rawCode.trim();
     if (!clean) return;
 
-    // Buscar participante por Código (preferente) o DNI
-    const found = participants.find(
-      (p) =>
-        p.codigo.toLowerCase() === clean.toLowerCase() ||
-        p.dni.toLowerCase() === clean.toLowerCase() ||
-        p.id.toLowerCase() === clean.toLowerCase()
-    );
+    // Si el QR escaneado es una URL (ej. https://.../#/checkin?code=IM-2026-0003 o dni=72859994)
+    if (clean.includes('?') || clean.includes('/')) {
+      const urlCodeMatch = clean.match(/[?&](?:code|codigo|dni|id)=([A-Za-z0-9_-]+)/i);
+      if (urlCodeMatch && urlCodeMatch[1]) {
+        clean = urlCodeMatch[1].trim();
+      } else {
+        const pathPartMatch = clean.match(/(IM-\d{4}-\d+|[0-9]{8})/i);
+        if (pathPartMatch && pathPartMatch[1]) {
+          clean = pathPartMatch[1].trim();
+        }
+      }
+    }
+
+    const cleanUpper = clean.toUpperCase();
+    const digitsOnly = clean.replace(/\D/g, '');
+    const dniPadded = digitsOnly.length > 0 && digitsOnly.length <= 8 ? digitsOnly.padStart(8, '0') : '';
+
+    // Buscar participante por Código (preferente), DNI exacto, DNI normalizado o ID
+    const found = participants.find((p) => {
+      const pCod = p.codigo.trim().toUpperCase();
+      const pDni = p.dni.trim();
+      const pDniPadded = pDni.replace(/\D/g, '').padStart(8, '0');
+      const pId = p.id.toLowerCase();
+
+      return (
+        pCod === cleanUpper ||
+        pDni === clean ||
+        (dniPadded !== '' && pDniPadded === dniPadded) ||
+        pId === clean.toLowerCase()
+      );
+    });
 
     if (!found) {
       if (soundEnabled) playAudioFeedback('error');
