@@ -7,7 +7,6 @@ import { Participant } from '../../../domain/models/participant.model';
 import { AttendanceSessionMap } from '../../../domain/models/attendance.model';
 import { Icon } from '../../components/common/Icon';
 import { SelfCheckinQrModal } from '../../components/attendance/SelfCheckinQrModal';
-import { playAudioFeedback } from '../../utils/audio';
 import { appsScriptAttendanceClient } from '../../../infrastructure/api/apps-script-attendance.client';
 
 interface ScanFeedback {
@@ -21,7 +20,6 @@ export const AttendancePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [scanCodeInput, setScanCodeInput] = useState<string>('');
   const [showQrModal, setShowQrModal] = useState<boolean>(false);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [feedback, setFeedback] = useState<ScanFeedback | null>(null);
 
   const scanInputRef = useRef<HTMLInputElement>(null);
@@ -134,7 +132,6 @@ export const AttendancePage: React.FC = () => {
     });
 
     if (!found) {
-      if (soundEnabled) playAudioFeedback('error');
       triggerFeedback({
         type: 'error',
         message: `Código o DNI «${clean}» no encontrado en el padrón de participantes.`,
@@ -145,7 +142,6 @@ export const AttendancePage: React.FC = () => {
     // Verificar si ya está presente en la sesión activa
     const existing = records[found.id];
     if (existing && existing.status === 'present') {
-      if (soundEnabled) playAudioFeedback('warning');
       triggerFeedback({
         type: 'warning',
         message: `El participante ya registró asistencia en ${activeSession?.name || 'esta sesión'}.`,
@@ -171,7 +167,6 @@ export const AttendancePage: React.FC = () => {
       timestamp: nowTime,
     });
 
-    if (soundEnabled) playAudioFeedback('success');
     triggerFeedback({
       type: 'success',
       message: `¡Asistencia registrada con éxito!`,
@@ -205,123 +200,76 @@ export const AttendancePage: React.FC = () => {
 
   return (
     <>
-      {/* Hero Header Ejecutivo y Minimalista */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #070a18 0%, #0f172a 100%)',
-          borderRadius: '24px',
-          padding: '2rem 2.25rem',
-          color: '#ffffff',
-          marginBottom: '1.75rem',
-          boxShadow: '0 20px 30px -10px rgba(7, 10, 24, 0.4)',
-          border: '1px solid #1e293b',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '1.5rem',
-            position: 'relative',
-            zIndex: 1,
-          }}
-        >
-          <div>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                backgroundColor: 'rgba(203, 251, 69, 0.15)',
-                color: '#cbfb45',
-                padding: '0.35rem 0.85rem',
-                borderRadius: '9999px',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase',
-                marginBottom: '0.75rem',
-                border: '1px solid rgba(203, 251, 69, 0.3)',
-              }}
-            >
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#cbfb45' }} />
-              Innovathon 2026 • Asistencia en Vivo
-            </div>
-            <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#ffffff', margin: 0, letterSpacing: '-0.02em' }}>
-              Control de Asistencias
-            </h1>
-            <p style={{ margin: '0.4rem 0 0', fontSize: '0.925rem', color: '#94a3b8', maxWidth: '600px' }}>
-              Proyecta el QR para que los participantes se registren con su celular o márcalos al instante con su DNI.
-            </p>
-          </div>
+      {/* Encabezado Administrativo Limpio y Sobrio */}
+      <div className="page-header-row" style={{ marginBottom: '1.25rem' }}>
+        <div>
+          <h1 className="page-title" style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0F172A' }}>
+            Control de Asistencia
+          </h1>
+          <p className="page-subtitle" style={{ color: '#64748B', fontSize: '0.875rem', marginTop: '0.2rem' }}>
+            Gestiona la toma de asistencia por sesión y genera el QR para los participantes.
+          </p>
+        </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={() => setShowQrModal(true)}
-              style={{
-                backgroundColor: '#cbfb45',
-                color: '#070a18',
-                border: 'none',
-                padding: '0.85rem 1.4rem',
-                borderRadius: '14px',
-                fontWeight: 800,
-                fontSize: '0.95rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.6rem',
-                boxShadow: '0 0 25px rgba(203, 251, 69, 0.35)',
-                transition: 'transform 0.15s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
-              title="Abre el cartel QR gigante para proyectarlo o imprimirlo"
-            >
-              <Icon name="maximize" size={20} />
-              <span>Proyectar QR Auto Check-in</span>
-            </button>
+        <div className="page-actions" style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Botón QR: sobrio, profesional, pero claramente visible */}
+          <button
+            type="button"
+            onClick={() => setShowQrModal(true)}
+            className="btn btn-sm"
+            style={{
+              backgroundColor: '#4338CA',
+              color: '#FFFFFF',
+              border: '1px solid #3730A3',
+              borderRadius: '8px',
+              padding: '0.5rem 0.95rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+            }}
+            title="Abrir y proyectar el código QR de autoasistencia"
+          >
+            <Icon name="maximize" size={16} />
+            <span>Código QR de Asistencia</span>
+          </button>
 
-            <button
-              type="button"
-              onClick={() => refresh()}
-              disabled={loading}
-              className={`btn btn-secondary ${loading ? 'spinning' : ''}`}
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                color: '#f8fafc',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                borderRadius: '14px',
-                padding: '0.85rem 1.25rem',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-              }}
-            >
-              <Icon name="refresh" size={18} />
-              <span>Actualizar</span>
-            </button>
+          <button
+            type="button"
+            onClick={() => refresh()}
+            disabled={loading}
+            className={`btn btn-secondary btn-sm ${loading ? 'spinning' : ''}`}
+            style={{
+              borderRadius: '8px',
+              padding: '0.5rem 0.85rem',
+              fontSize: '0.875rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            <Icon name="refresh" size={15} />
+            <span>Actualizar</span>
+          </button>
 
-            <Link
-              to="/"
-              className="btn btn-secondary"
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                color: '#f8fafc',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                borderRadius: '14px',
-                padding: '0.85rem 1.25rem',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-              }}
-            >
-              <Icon name="arrowLeft" size={18} />
-              <span>Panel</span>
-            </Link>
-          </div>
+          <Link
+            to="/"
+            className="btn btn-secondary btn-sm"
+            style={{
+              borderRadius: '8px',
+              padding: '0.5rem 0.85rem',
+              fontSize: '0.875rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            <Icon name="arrowLeft" size={15} />
+            <span>Panel</span>
+          </Link>
         </div>
       </div>
 
@@ -423,27 +371,6 @@ export const AttendancePage: React.FC = () => {
               Digita el DNI o Código del participante y presiona Enter
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            style={{
-              padding: '0.4rem 0.85rem',
-              borderRadius: '9999px',
-              border: '1px solid #e2e8f0',
-              backgroundColor: soundEnabled ? '#f0fdf4' : '#f8fafc',
-              color: soundEnabled ? '#15803d' : '#64748b',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              cursor: 'pointer',
-            }}
-          >
-            <Icon name="volume2" size={14} />
-            <span>{soundEnabled ? 'Sonido Activado' : 'Silenciado'}</span>
-          </button>
         </div>
 
         {/* Input de Registro */}

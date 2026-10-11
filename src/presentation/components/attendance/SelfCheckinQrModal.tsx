@@ -92,12 +92,12 @@ export const SelfCheckinQrModal: React.FC<SelfCheckinQrModalProps> = ({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <img src={logoPrincipal} alt="Innovathon" style={{ height: '32px', width: 'auto' }} />
+            <img src={logoPrincipal} alt="Innovathon" style={{ height: '28px', width: 'auto' }} />
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.01em' }}>
+              <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0F172A' }}>
                 Código QR de Asistencia
               </h2>
-              <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: '#64748B' }}>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>
                 Los participantes escanean con su celular para registrarse
               </p>
             </div>
@@ -109,9 +109,9 @@ export const SelfCheckinQrModal: React.FC<SelfCheckinQrModalProps> = ({
             style={{
               background: '#F1F5F9',
               border: 'none',
-              borderRadius: '9999px',
-              width: '32px',
-              height: '32px',
+              borderRadius: '6px',
+              width: '30px',
+              height: '30px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -119,26 +119,26 @@ export const SelfCheckinQrModal: React.FC<SelfCheckinQrModalProps> = ({
               color: '#64748B',
             }}
           >
-            <Icon name="x" size={18} />
+            <Icon name="x" size={16} />
           </button>
         </div>
 
         {/* Cuerpo del Modal */}
         <div style={{ padding: '1.5rem', overflowY: 'auto', textAlign: 'center' }}>
-          {/* Selector de Sesión activa */}
+          {/* Selector de Sesión activo */}
           <div style={{ marginBottom: '1.25rem', textAlign: 'left' }}>
             <label
               style={{
                 display: 'block',
-                fontSize: '0.8rem',
-                fontWeight: 700,
+                fontSize: '0.75rem',
+                fontWeight: 600,
                 textTransform: 'uppercase',
-                letterSpacing: '0.05em',
+                letterSpacing: '0.04em',
                 color: '#64748B',
-                marginBottom: '0.5rem',
+                marginBottom: '0.4rem',
               }}
             >
-              Seleccionar Sesión para el QR:
+              Sesión activa:
             </label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
               {sessions.map((s) => {
@@ -149,15 +149,14 @@ export const SelfCheckinQrModal: React.FC<SelfCheckinQrModalProps> = ({
                     type="button"
                     onClick={() => onSelectSession(s.id)}
                     style={{
-                      padding: '0.4rem 0.85rem',
-                      borderRadius: '9999px',
+                      padding: '0.35rem 0.75rem',
+                      borderRadius: '6px',
                       fontSize: '0.8rem',
-                      fontWeight: isSelected ? 700 : 500,
+                      fontWeight: isSelected ? 600 : 500,
                       cursor: 'pointer',
-                      border: isSelected ? '2px solid #4F46E5' : '1px solid #E2E8F0',
-                      backgroundColor: isSelected ? '#EEF2FF' : '#F8FAFC',
+                      border: isSelected ? '1px solid #4338CA' : '1px solid #E2E8F0',
+                      backgroundColor: isSelected ? '#EEF2FF' : '#FFFFFF',
                       color: isSelected ? '#4338CA' : '#475569',
-                      transition: 'all 0.15s ease',
                     }}
                   >
                     {s.name}
@@ -167,62 +166,41 @@ export const SelfCheckinQrModal: React.FC<SelfCheckinQrModalProps> = ({
             </div>
           </div>
 
-          {/* Banner indicador de la sesión */}
+          {/* Contenedor del Código QR sobrio */}
           <div
             style={{
-              backgroundColor: '#F0FDF4',
-              border: '1px solid #BBF7D0',
-              borderRadius: '0.75rem',
-              padding: '0.6rem 1rem',
-              marginBottom: '1.25rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: '#15803D',
-              fontSize: '0.875rem',
-              fontWeight: 600,
-            }}
-          >
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22C55E' }} />
-            Marcando automáticamente en: <strong>{activeSessionName}</strong>
-          </div>
-
-          {/* Contenedor del Código QR */}
-          <div
-            style={{
-              background: '#FFFFFF',
-              padding: '1.25rem',
-              borderRadius: '1rem',
-              border: '2px dashed #CBD5E1',
+              background: '#FAFAFA',
+              padding: '1.5rem',
+              borderRadius: '12px',
+              border: '1px solid #E2E8F0',
               display: 'inline-flex',
               flexDirection: 'column',
               alignItems: 'center',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
             }}
           >
             <QRCodeSVG
               value={checkinUrl}
-              size={240}
+              size={220}
               level="H"
               includeMargin={true}
               imageSettings={{
                 src: logoPrincipal,
                 x: undefined,
                 y: undefined,
-                height: 48,
-                width: 48,
+                height: 40,
+                width: 40,
                 excavate: true,
               }}
             />
             <p
               style={{
                 margin: '0.75rem 0 0 0',
-                fontSize: '0.8rem',
-                color: '#64748B',
+                fontSize: '0.85rem',
+                color: '#475569',
                 fontWeight: 600,
               }}
             >
-              Escanea para marcar tu asistencia
+              {activeSessionName}
             </p>
           </div>
 
@@ -235,7 +213,7 @@ export const SelfCheckinQrModal: React.FC<SelfCheckinQrModalProps> = ({
               gap: '0.5rem',
               background: '#F8FAFC',
               padding: '0.5rem 0.75rem',
-              borderRadius: '0.5rem',
+              borderRadius: '6px',
               border: '1px solid #E2E8F0',
             }}
           >
@@ -256,10 +234,10 @@ export const SelfCheckinQrModal: React.FC<SelfCheckinQrModalProps> = ({
               type="button"
               onClick={handleCopy}
               className="btn btn-secondary btn-sm"
-              style={{ padding: '0.3rem 0.7rem', fontSize: '0.75rem' }}
+              style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', borderRadius: '4px' }}
             >
-              <Icon name={copied ? 'check' : 'copy'} size={14} />
-              <span>{copied ? '¡Copiado!' : 'Copiar'}</span>
+              <Icon name={copied ? 'check' : 'copy'} size={13} />
+              <span>{copied ? 'Copiado' : 'Copiar'}</span>
             </button>
           </div>
         </div>
