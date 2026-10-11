@@ -14,7 +14,7 @@ export const APPS_SCRIPT_ENDPOINTS = {
    * - Lectura de «Registros»
    * - Marcado dinámico en matriz «Asistencias»
    */
-  attendance: 'https://script.google.com/macros/s/AKfycbxhYR57JU1ls9YBIGrV2whnxvehNJ2-nqvKuW60wN4OU1MiJXcLbjuJ9v8js97_wUsS/exec',
+  attendance: 'https://script.google.com/macros/s/AKfycbyKS4Q_zx9_UWkb5oYXztefEzBIiwKzH5uIC8w4LezO-pJkgF_-l_AotUOe1U4JUWVTPw/exec',
 
   /**
    * Endpoint futuro para Certificados (generación de PDFs en Google Drive, plantillas y firmas)
