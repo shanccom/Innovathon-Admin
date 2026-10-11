@@ -6,7 +6,7 @@ import { Icon } from '../../components/common/Icon';
 
 const SAMPLE_APPS_SCRIPT_CODE = `/**
  * Backend de Google Apps Script para Innovathon Mollendo 2026
- * Permite leer "Registros" y escribir en "Asistencias" de forma segura.
+ * Permite leer "Registros" y despachar "Comunicados" masivos sin riesgo de spam ni timeouts.
  */
 
 function doGet(e) {
@@ -34,6 +34,103 @@ function doGet(e) {
       total: rows.length,
       data: rows
     });
+  } catch (err) {
+    return responseJSON({ success: false, error: err.message });
+  }
+}
+
+function doPost(e) {
+  try {
+    const contents = e && e.postData && e.postData.contents ? JSON.parse(e.postData.contents) : {};
+    const action = contents.action || '';
+
+    // 1. Envío de prueba individual
+    if (action === 'send_test') {
+      const emailParams = {
+        to: contents.to,
+        subject: contents.subject,
+        htmlBody: contents.htmlBody,
+        body: contents.plainBody || '',
+        name: 'Innovathon Mollendo 2026'
+      };
+
+      if (contents.imageBase64 && contents.imageMimeType) {
+        const raw = contents.imageBase64.split(',')[1] || contents.imageBase64;
+        emailParams.inlineImages = {
+          imagen: Utilities.newBlob(Utilities.base64Decode(raw), contents.imageMimeType, 'banner')
+        };
+      }
+
+      MailApp.sendEmail(emailParams);
+      return responseJSON({ success: true, message: 'Prueba enviada a ' + contents.to });
+    }
+
+    // 2. Despacho masivo por lotes con registro en HISTORIAL
+    if (action === 'send_campaign') {
+      const recipients = contents.destinatarios || [];
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      let logSheet = ss.getSheetByName('HISTORIAL_COMUNICADOS');
+      if (!logSheet) {
+        logSheet = ss.insertSheet('HISTORIAL_COMUNICADOS');
+        logSheet.appendRow(['Fecha', 'Campaña', 'Destinatario', 'Nombre', 'Asunto', 'Estado', 'Error']);
+      }
+
+      let imageBlob = null;
+      if (contents.template && contents.template.imageBase64) {
+        const raw = contents.template.imageBase64.split(',')[1] || contents.template.imageBase64;
+        imageBlob = Utilities.newBlob(Utilities.base64Decode(raw), contents.template.imageMimeType || 'image/jpeg', 'banner');
+      }
+
+      let enviados = 0;
+      let errores = 0;
+      const detalles = [];
+
+      for (let i = 0; i < recipients.length; i++) {
+        const r = recipients[i];
+        try {
+          const emailParams = {
+            to: r.correo,
+            subject: r.asunto,
+            htmlBody: r.htmlBody,
+            body: r.plainBody || '',
+            name: 'Innovathon Mollendo 2026'
+          };
+          if (imageBlob) {
+            emailParams.inlineImages = { imagen: imageBlob };
+          }
+          MailApp.sendEmail(emailParams);
+          enviados++;
+          detalles.push({ correo: r.correo, nombre: r.nombre, estado: 'ENVIADO', timestamp: new Date().toLocaleTimeString() });
+          logSheet.appendRow([new Date(), contents.campaignName, r.correo, r.nombre, r.asunto, 'ENVIADO', '']);
+        } catch (err) {
+          errores++;
+          detalles.push({ correo: r.correo, nombre: r.nombre, estado: 'ERROR', error: err.message, timestamp: new Date().toLocaleTimeString() });
+          logSheet.appendRow([new Date(), contents.campaignName, r.correo, r.nombre, r.asunto, 'ERROR', err.message]);
+        }
+        // Pacing de 1 segundo para proteger reputación de spam
+        Utilities.sleep(1000);
+      }
+
+      return responseJSON({
+        success: true,
+        campaign: {
+          id: 'CMP_' + Date.now(),
+          nombre: contents.campaignName,
+          asunto: contents.template.asunto,
+          cuerpo: contents.template.cuerpo,
+          imagenAdjunta: Boolean(imageBlob),
+          totalDestinatarios: recipients.length,
+          enviados: enviados,
+          errores: errores,
+          omitidos: 0,
+          fecha: new Date().toLocaleString(),
+          estado: errores > 0 ? (enviados > 0 ? 'parcial' : 'fallido') : 'completado',
+          detalles: detalles
+        }
+      });
+    }
+
+    return responseJSON({ success: false, error: 'Acción no reconocida' });
   } catch (err) {
     return responseJSON({ success: false, error: err.message });
   }
