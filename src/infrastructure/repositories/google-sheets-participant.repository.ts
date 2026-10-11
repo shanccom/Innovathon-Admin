@@ -68,11 +68,20 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
     const codigoKey = findKey('codigo', 'code', 'ticket', 'identificador');
     const dniKey = findKey('dni', 'documento', 'identificacion', 'cedula');
     const nameKey = findKey('nombre', 'participante');
-    const correoKey = findKey('correo', 'email', 'mail');
+    const personalEmailKey = findKey('correo personal', 'email personal', 'personal');
+    const institutionalEmailKey = findKey('correo institucional', 'email institucional', 'institucional');
+    const genericEmailKey = findKey('correo', 'email', 'mail');
 
     const hasVal = (k?: string) =>
       Boolean(k && row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '');
-    return hasVal(codigoKey) || hasVal(dniKey) || hasVal(nameKey) || hasVal(correoKey);
+    return (
+      hasVal(codigoKey) ||
+      hasVal(dniKey) ||
+      hasVal(nameKey) ||
+      hasVal(personalEmailKey) ||
+      hasVal(institutionalEmailKey) ||
+      hasVal(genericEmailKey)
+    );
   }
 
   async fetchParticipants(forceRefresh = false): Promise<ParticipantFetchResult> {
@@ -121,7 +130,11 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
     // 1. Apps Script Web App (if configured)
     if (config.appsScriptUrl && config.appsScriptUrl.trim()) {
       try {
-        const res = await fetch(config.appsScriptUrl.trim(), {
+        const rawUrl = config.appsScriptUrl.trim();
+        const separator = rawUrl.includes('?') ? '&' : '?';
+        const urlWithAction = rawUrl.includes('action=') ? rawUrl : `${rawUrl}${separator}action=data`;
+
+        const res = await fetch(urlWithAction, {
           method: 'GET',
           mode: 'cors',
         });
@@ -131,21 +144,23 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
             ? json
             : json.data || json.rows || [];
           const validRows = rows.filter(r => this.isParticipantRow(r));
-          const normalized = this.normalizeRows(validRows);
-          this.cachedData = normalized;
-          this.lastStatus = {
-            state: 'connected',
-            message: 'Sincronizado vía Apps Script Web App',
-            count: normalized.length,
-            timestamp: Date.now(),
-          };
-          this.saveCache(normalized);
-          return {
-            success: true,
-            data: normalized,
-            count: normalized.length,
-            status: this.lastStatus,
-          };
+          if (validRows.length > 0 || (json.success === true && Array.isArray(json.data))) {
+            const normalized = this.normalizeRows(validRows);
+            this.cachedData = normalized;
+            this.lastStatus = {
+              state: 'connected',
+              message: `Sincronizado vía Apps Script Web App (${normalized.length} participantes)`,
+              count: normalized.length,
+              timestamp: Date.now(),
+            };
+            this.saveCache(normalized);
+            return {
+              success: true,
+              data: normalized,
+              count: normalized.length,
+              status: this.lastStatus,
+            };
+          }
         }
       } catch (err) {
         console.warn('Fallo al conectar con Apps Script Web App:', err);
@@ -290,9 +305,23 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
       const apellidosKey = findKey('apellidos', 'apellido');
 
       const equipoKey = findKey('equipo', 'proyecto', 'team', 'grupo', 'reto', 'eje', 'institucion');
-      const correoKey = findKey('correo', 'email', 'mail');
+      // Priorizar explícitamente el Correo Personal (obligatorio para la postulación y comunicación)
+      const personalEmailKey = findKey('correo personal', 'email personal', 'personal');
+      const institutionalEmailKey = findKey('correo institucional', 'email institucional', 'institucional');
+      const genericEmailKey = findKey('correo', 'email', 'mail');
       const celularKey = findKey('celular', 'telefono', 'whatsapp', 'movil');
       const rolKey = findKey('rol', 'categoria', 'tipo', 'modalidad');
+
+      const getVal = (k?: string) =>
+        k && row[k] !== undefined && row[k] !== null ? String(row[k]).trim() : '';
+
+      const correoPersonal = getVal(personalEmailKey);
+      const correoInstitucional = getVal(institutionalEmailKey);
+      const correoGenerico = getVal(genericEmailKey);
+
+      // El correo prioritario para notificaciones y comunicados es el Personal (obligatorio),
+      // con fallback a Institucional o Genérico si no tuviera correo personal.
+      const correoFinal = correoPersonal || correoInstitucional || correoGenerico || '—';
 
       let nombre = '';
       if (fullCombinedKey && row[fullCombinedKey]) {
@@ -316,7 +345,8 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
         dni: dniKey && row[dniKey] ? String(row[dniKey]).trim() : '—',
         nombre: nombre.trim(),
         equipo: equipoKey && row[equipoKey] ? String(row[equipoKey]).trim() : 'Sin equipo asignado',
-        correo: correoKey && row[correoKey] ? String(row[correoKey]).trim() : '—',
+        correo: correoFinal,
+        correoInstitucional: correoInstitucional || undefined,
         celular: celularKey && row[celularKey] ? String(row[celularKey]).trim() : '—',
         rol: rolKey && row[rolKey] ? String(row[rolKey]).trim() : 'Participante',
         estado: 'Registrado',

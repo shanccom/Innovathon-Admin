@@ -6,8 +6,7 @@ import { Icon } from '../../components/common/Icon';
 
 const SAMPLE_APPS_SCRIPT_CODE = `/**
  * Backend de Google Apps Script para Innovathon Mollendo 2026
- * - Lectura en tiempo real de la hoja «Registros»
- * - Escritura automática en FORMATO MATRIZ en la hoja «Asistencias»
+ * Permite leer "Registros" y despachar "Comunicados" masivos sin riesgo de spam ni timeouts.
  */
 
 function doGet(e) {
@@ -42,67 +41,100 @@ function doGet(e) {
 
 function doPost(e) {
   try {
-    const contents = e.postData ? e.postData.contents : "";
-    const payload = JSON.parse(contents);
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    
-    // 1. Obtener o crear la hoja "Asistencias" en FORMATO MATRIZ
-    let sheet = ss.getSheetByName("Asistencias");
-    if (!sheet) {
-      sheet = ss.insertSheet("Asistencias");
-      sheet.appendRow(["Código", "DNI", "Participante", "Equipo", "Asistencia 1", "Asistencia 2", "Asistencia 3"]);
-      sheet.getRange(1, 1, 1, 7).setFontWeight("bold").setBackground("#0f3d2e").setFontColor("#ffffff");
-      sheet.setFrozenRows(1);
-    }
-    
-    // 2. Localizar o crear la columna para la sesión (ej. "Asistencia 1", "Asistencia 2", etc.)
-    const headers = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0];
-    const sessionName = payload.sessionName || payload.sessionId || "Asistencia 1";
-    
-    let sessionColIndex = headers.indexOf(sessionName) + 1;
-    if (sessionColIndex === 0) {
-      sessionColIndex = headers.length + 1;
-      sheet.getRange(1, sessionColIndex).setValue(sessionName).setFontWeight("bold").setBackground("#0f3d2e").setFontColor("#ffffff");
-    }
-    
-    // 3. Buscar si el participante ya existe en la matriz por Código o DNI
-    const lastRow = sheet.getLastRow();
-    let participantRowIndex = -1;
-    
-    if (lastRow > 1) {
-      const data = sheet.getRange(2, 1, lastRow - 1, 2).getValues(); // Cols A (Código) y B (DNI)
-      for (let i = 0; i < data.length; i++) {
-        const rowCode = String(data[i][0]).trim().toLowerCase();
-        const rowDni = String(data[i][1]).trim().toLowerCase();
-        const searchCode = String(payload.codigo || "").trim().toLowerCase();
-        const searchDni = String(payload.dni || "").trim().toLowerCase();
-        
-        if ((searchCode && rowCode === searchCode) || (searchDni && rowDni === searchDni)) {
-          participantRowIndex = i + 2;
-          break;
-        }
+    const contents = e && e.postData && e.postData.contents ? JSON.parse(e.postData.contents) : {};
+    const action = contents.action || '';
+
+    // 1. Envío de prueba individual
+    if (action === 'send_test') {
+      let html = contents.htmlBody || '';
+      const emailParams = {
+        to: contents.to,
+        subject: contents.subject,
+        body: contents.plainBody || '',
+        name: 'Innovathon Mollendo 2026'
+      };
+
+      if (contents.imageBase64 && contents.imageMimeType) {
+        const raw = contents.imageBase64.indexOf(',') >= 0 ? contents.imageBase64.split(',')[1] : contents.imageBase64;
+        emailParams.inlineImages = {
+          imagen: Utilities.newBlob(Utilities.base64Decode(raw), contents.imageMimeType, 'banner')
+        };
+        html = html.replace(/src="data:image\/[^;]+;base64,[^"]+"/g, 'src="cid:imagen"');
       }
+      emailParams.htmlBody = html;
+
+      MailApp.sendEmail(emailParams);
+      return responseJSON({ success: true, message: 'Prueba enviada a ' + contents.to });
     }
-    
-    // 4. Si es nuevo en la matriz, agregar fila
-    if (participantRowIndex === -1) {
-      participantRowIndex = lastRow + 1;
-      sheet.getRange(participantRowIndex, 1).setValue(payload.codigo || "");
-      sheet.getRange(participantRowIndex, 2).setValue(payload.dni || "");
-      sheet.getRange(participantRowIndex, 3).setValue(payload.nombre || "");
-      sheet.getRange(participantRowIndex, 4).setValue(payload.equipo || "");
+
+    // 2. Despacho masivo por lotes con registro en HISTORIAL
+    if (action === 'send_campaign') {
+      const recipients = contents.destinatarios || [];
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      let logSheet = ss.getSheetByName('HISTORIAL_COMUNICADOS');
+      if (!logSheet) {
+        logSheet = ss.insertSheet('HISTORIAL_COMUNICADOS');
+        logSheet.appendRow(['Fecha', 'Campaña', 'Destinatario', 'Nombre', 'Asunto', 'Estado', 'Error']);
+      }
+
+      let imageBlob = null;
+      if (contents.template && contents.template.imageBase64) {
+        const raw = contents.template.imageBase64.indexOf(',') >= 0 ? contents.template.imageBase64.split(',')[1] : contents.template.imageBase64;
+        imageBlob = Utilities.newBlob(Utilities.base64Decode(raw), contents.template.imageMimeType || 'image/jpeg', 'banner');
+      }
+
+      let enviados = 0;
+      let errores = 0;
+      const detalles = [];
+
+      for (let i = 0; i < recipients.length; i++) {
+        const r = recipients[i];
+        try {
+          let html = r.htmlBody || '';
+          const emailParams = {
+            to: r.correo,
+            subject: r.asunto,
+            body: r.plainBody || '',
+            name: 'Innovathon Mollendo 2026'
+          };
+          if (imageBlob) {
+            html = html.replace(/src="data:image\/[^;]+;base64,[^"]+"/g, 'src="cid:imagen"');
+            emailParams.inlineImages = { imagen: imageBlob };
+          }
+          emailParams.htmlBody = html;
+          MailApp.sendEmail(emailParams);
+          enviados++;
+          detalles.push({ correo: r.correo, nombre: r.nombre, estado: 'ENVIADO', timestamp: new Date().toLocaleTimeString() });
+          logSheet.appendRow([new Date(), contents.campaignName, r.correo, r.nombre, r.asunto, 'ENVIADO', '']);
+        } catch (err) {
+          errores++;
+          detalles.push({ correo: r.correo, nombre: r.nombre, estado: 'ERROR', error: err.message, timestamp: new Date().toLocaleTimeString() });
+          logSheet.appendRow([new Date(), contents.campaignName, r.correo, r.nombre, r.asunto, 'ERROR', err.message]);
+        }
+        // Pacing de 1 segundo para proteger reputación de spam
+        Utilities.sleep(1000);
+      }
+
+      return responseJSON({
+        success: true,
+        campaign: {
+          id: 'CMP_' + Date.now(),
+          nombre: contents.campaignName,
+          asunto: contents.template.asunto,
+          cuerpo: contents.template.cuerpo,
+          imagenAdjunta: Boolean(imageBlob),
+          totalDestinatarios: recipients.length,
+          enviados: enviados,
+          errores: errores,
+          omitidos: 0,
+          fecha: new Date().toLocaleString(),
+          estado: errores > 0 ? (enviados > 0 ? 'parcial' : 'fallido') : 'completado',
+          detalles: detalles
+        }
+      });
     }
-    
-    // 5. Escribir o limpiar la marca de asistencia
-    const valueToSet = payload.action === 'unmarkAttendance' ? '' : (payload.timestamp || new Date().toLocaleTimeString());
-    sheet.getRange(participantRowIndex, sessionColIndex).setValue(valueToSet);
-    
-    return responseJSON({
-      success: true,
-      message: "Matriz actualizada correctamente",
-      row: participantRowIndex,
-      col: sessionColIndex
-    });
+
+    return responseJSON({ success: false, error: 'Acción no reconocida' });
   } catch (err) {
     return responseJSON({ success: false, error: err.message });
   }
