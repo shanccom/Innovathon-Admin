@@ -993,9 +993,9 @@ button {
 
 /* Badges de estado dinámico */
 .badge-live {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
   padding: 1px 7px;
   border-radius: var(--radius-sm);
   font-size: 0.65rem;
@@ -1004,15 +1004,6 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-}
-
-.badge-live::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #10b981;
-  box-shadow: 0 0 6px #10b981;
 }
 
 .badge-warning {

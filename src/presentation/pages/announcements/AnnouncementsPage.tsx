@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAnnouncements } from '../../../application/hooks/useAnnouncements';
-import { useConfig } from '../../../application/hooks/useConfig';
 import { Icon } from '../../components/common/Icon';
 
 type ActiveTab = 'destinatarios' | 'redaccion' | 'previa' | 'envio' | 'historial';
 
 export const AnnouncementsPage: React.FC = () => {
-  const { config } = useConfig();
-  const hasAppsScript = Boolean(config.appsScriptUrl && config.appsScriptUrl.trim());
-
   const [activeTab, setActiveTab] = useState<ActiveTab>('redaccion');
   const [testEmailInput, setTestEmailInput] = useState<string>('');
   const [campaignNameInput, setCampaignNameInput] = useState<string>('');
@@ -129,39 +125,6 @@ export const AnnouncementsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Banner de Estado de Conexión */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0.65rem 1rem',
-          borderRadius: 'var(--radius-sm)',
-          marginBottom: '1.25rem',
-          backgroundColor: hasAppsScript ? 'var(--status-success-bg)' : 'var(--status-warning-bg)',
-          border: `1px solid ${hasAppsScript ? 'var(--status-success-border)' : 'var(--status-warning-border)'}`,
-          fontSize: '0.85rem',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Icon name={hasAppsScript ? 'checkCircle' : 'alertCircle'} size={18} />
-          <span>
-            {hasAppsScript ? (
-              <>
-                <strong>Conexión con Apps Script activa:</strong> Enlazado para despacho vía Gmail (<code>{config.appsScriptUrl.slice(0, 48)}...</code>).
-              </>
-            ) : (
-              <>
-                <strong>Sin conexión a Gmail:</strong> No hay URL de Google Apps Script configurada. Configura la Web App para que los correos salgan en la vida real.
-              </>
-            )}
-          </span>
-        </div>
-        <Link to="/configuracion" className="btn btn-secondary btn-sm" style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}>
-          Ver Configuración
-        </Link>
-      </div>
-
       {/* Tarjetas de Métricas de Campaña */}
       <div className="status-cards-row" style={{ marginBottom: '1.5rem' }}>
         <div className="status-step-card" onClick={() => setActiveTab('destinatarios')} style={{ cursor: 'pointer' }}>
@@ -195,10 +158,10 @@ export const AnnouncementsPage: React.FC = () => {
             </div>
             <small style={{ color: spamBadgeColor, fontSize: '0.75rem', fontWeight: 600 }}>
               {spamEvaluation.nivel === 'safe'
-                ? '🟢 Excelente entregabilidad'
+                ? 'Entregabilidad alta'
                 : spamEvaluation.nivel === 'caution'
-                ? '🟡 Riesgo moderado'
-                : '🔴 Alto riesgo de Spam'}
+                ? 'Riesgo moderado'
+                : 'Riesgo alto de spam'}
             </small>
           </div>
         </div>
@@ -398,7 +361,7 @@ export const AnnouncementsPage: React.FC = () => {
               {/* Sección de Imagen Optimizada */}
               <div style={{ padding: '1rem', border: '1px dashed var(--border-medium)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-subtle)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>🖼️ Imagen adjunta (Opcional)</span>
+                  <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Imagen adjunta (opcional)</span>
                   {template.imagenBase64 && (
                     <button
                       type="button"
@@ -507,7 +470,7 @@ export const AnnouncementsPage: React.FC = () => {
                           {adv.mensaje}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                          👉 {adv.sugerencia}
+                          {adv.sugerencia}
                         </div>
                       </div>
                     ))}
@@ -879,7 +842,7 @@ export const AnnouncementsPage: React.FC = () => {
 
               {/* Advertencias antes del envío */}
               <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fef3c7', borderRadius: 'var(--radius-sm)', padding: '0.75rem', marginBottom: '1rem', fontSize: '0.8rem', color: '#92400e' }}>
-                <strong>⚠️ Candado de Seguridad Anti-Errores:</strong>
+                <strong>Candado de seguridad anti-errores:</strong>
                 <div>
                   • Destinatarios seleccionados: <strong>{targetRecipients.length} personas</strong>.
                 </div>
@@ -905,7 +868,7 @@ export const AnnouncementsPage: React.FC = () => {
           {isSending && (
             <div style={{ marginTop: '1.5rem', padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-midnight)' }}>
-                🚀 Enviando comunicado ({progress.porcentaje}%)...
+                Enviando comunicado ({progress.porcentaje}%)...
               </h3>
               <div style={{ height: '14px', backgroundColor: '#e2e8f0', borderRadius: '7px', overflow: 'hidden', marginBottom: '0.75rem' }}>
                 <div

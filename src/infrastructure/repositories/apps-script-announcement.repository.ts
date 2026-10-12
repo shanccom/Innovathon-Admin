@@ -44,7 +44,7 @@ export class AppsScriptAnnouncementRepository implements AnnouncementRepository 
     if (!appsScriptUrl) {
       return {
         success: false,
-        message: `⚠️ No se envió correo real a ${destinatarioPrueba}: No hay una URL de Google Apps Script Web App configurada. Ve a «Configuración» para conectar tu endpoint de Gmail.`,
+        message: `No se envió correo real a ${destinatarioPrueba}: no hay una URL de Google Apps Script Web App configurada. Ve a «Configuración» para conectar tu endpoint de Gmail.`,
         destinatario: destinatarioPrueba,
       };
     }
@@ -78,7 +78,7 @@ export class AppsScriptAnnouncementRepository implements AnnouncementRepository 
         if (responseText.includes('No se pudo abrir el archivo') || responseText.includes('ServiceLogin')) {
           return {
             success: false,
-            message: `❌ Error de Google Apps Script: La Web App requiere autorización o no tiene permisos de ejecución pública. Abre la hoja de cálculo y verifica la implementación.`,
+            message: `Error de Google Apps Script: la Web App requiere autorización o no tiene permisos de ejecución pública. Abre la hoja de cálculo y verifica la implementación.`,
             destinatario: destinatarioPrueba,
           };
         }
@@ -88,13 +88,13 @@ export class AppsScriptAnnouncementRepository implements AnnouncementRepository 
       if (json.success === true) {
         return {
           success: true,
-          message: json.message || `✅ Correo de prueba enviado con éxito vía Gmail / Apps Script a ${destinatarioPrueba}.`,
+          message: json.message || `Correo de prueba enviado con éxito vía Gmail / Apps Script a ${destinatarioPrueba}.`,
           destinatario: destinatarioPrueba,
         };
       } else {
         return {
           success: false,
-          message: `❌ Google Apps Script rechazó el envío: ${json.error || 'Error desconocido'}. Recuerda actualizar e implementar la nueva versión del script en Google Sheets.`,
+          message: `Google Apps Script rechazó el envío: ${json.error || 'Error desconocido'}. Recuerda actualizar e implementar la nueva versión del script en Google Sheets.`,
           destinatario: destinatarioPrueba,
         };
       }
@@ -103,7 +103,7 @@ export class AppsScriptAnnouncementRepository implements AnnouncementRepository 
       console.warn('Fallo al conectar con Google Apps Script:', err);
       return {
         success: false,
-        message: `❌ Error de conexión al enviar correo: ${errMsg}. Verifica que la URL de Apps Script sea correcta y esté publicada como "Cualquier persona".`,
+        message: `Error de conexión al enviar correo: ${errMsg}. Verifica que la URL de Apps Script sea correcta y esté publicada como "Cualquier persona".`,
         destinatario: destinatarioPrueba,
       };
     }
