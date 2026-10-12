@@ -62,7 +62,7 @@ export const GOOGLE_SHEETS_CONFIG = {
 ## Módulos principales
 
 1. **Panel Principal (Dashboard)**: Métricas operativas, sincronización en vivo con Google Sheets («Registros») y accesos directos.
-2. **Control de Asistencia** (`#/asistencias`): Registro de participantes, escáner de códigos de barras / QR, selector de jornada y conmutador de asistencia sincronizado en tiempo real con Google Sheets en formato matriz.
+2. **Control de Asistencia** (`#/asistencias`): Panel de solo lectura sobre la matriz «Matriz Asistencia», alimentada por el formulario de Google + Apps Script. Muestra sesiones, totales por participante y filtros de presentes/pendientes.
 3. **Gestión de Certificados** (`#/certificados`): Supervisión de estados del ciclo de certificación (pendiente de generación, firma digital, firmado y entregado).
 4. **Gestión de Comunicados** (`#/comunicados`): Redacción, filtros de destinatarios y registros de envíos masivos.
 

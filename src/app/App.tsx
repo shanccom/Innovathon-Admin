@@ -5,16 +5,11 @@ import { DashboardPage } from '../presentation/pages/dashboard/DashboardPage';
 import { AttendancePage } from '../presentation/pages/attendance/AttendancePage';
 import { CertificatesPage } from '../presentation/pages/certificates/CertificatesPage';
 import { AnnouncementsPage } from '../presentation/pages/announcements/AnnouncementsPage';
-import { SelfCheckinPage } from '../presentation/pages/checkin/SelfCheckinPage';
 
 export const App: React.FC = () => {
   return (
     <HashRouter>
       <Routes>
-        {/* Rutas públicas directas para auto-checkin desde el móvil del asistente */}
-        <Route path="/checkin" element={<SelfCheckinPage />} />
-        <Route path="/marcar" element={<SelfCheckinPage />} />
-
         {/* Rutas administrativas protegidas por el Layout */}
         <Route path="/" element={<Layout />}>
           <Route index element={<DashboardPage />} />

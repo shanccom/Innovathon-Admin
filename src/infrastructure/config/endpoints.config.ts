@@ -3,7 +3,7 @@
  * para Innovathon Mollendo 2026.
  *
  * Aquí puedes gestionar las URLs de Apps Script para cada módulo:
- * - Asistencias (toma de asistencia, control de entradas y matriz)
+ * - Asistencias (lectura de la matriz «Matriz Asistencia»)
  * - Certificados (generación y firma de diplomas)
  * - Comunicados (envío masivo de correos vía Gmail / Apps Script)
  */
@@ -12,9 +12,9 @@ export const APPS_SCRIPT_ENDPOINTS = {
   /**
    * Endpoint de Google Apps Script para Asistencias y Participantes:
    * - Lectura de «Registros»
-   * - Marcado dinámico en matriz «Asistencias»
+   * - Lectura de la matriz «Matriz Asistencia»
    */
-  attendance: 'https://script.google.com/macros/s/AKfycbyKS4Q_zx9_UWkb5oYXztefEzBIiwKzH5uIC8w4LezO-pJkgF_-l_AotUOe1U4JUWVTPw/exec',
+  attendance: 'https://script.google.com/macros/s/AKfycbyw7LsfMZlhDWTDmCjXg-MhHlsqjIqWLnVUtQEaje1CJ-g7pgijFo2ayLeiMjrjuHx6VA/exec',
 
   /**
    * Endpoint futuro para Certificados (generación de PDFs en Google Drive, plantillas y firmas)
@@ -33,4 +33,9 @@ export const APPS_SCRIPT_ENDPOINTS = {
 export const GOOGLE_SHEETS_CONFIG = {
   spreadsheetId: '1U48ftJJns3-4waJrt4A4uaI4OBNQoeyg1sOzzvXllI8',
   sheetName: 'Registros',
+  /**
+   * Pestaña donde el formulario de Google + Apps Script depositan la asistencia.
+   * Se lee en modo solo lectura (checkboxes por sesión) para mostrarla en el panel.
+   */
+  attendanceSheetName: 'Matriz Asistencia',
 } as const;
