@@ -20,7 +20,7 @@ export const DEMO_STATS: StatItem[] = [
     id: 'attendance',
     title: 'Asistencias registradas',
     value: '—',
-    note: 'Pendiente conexión hoja «Asistencias»',
+    note: 'Pendiente conexión hoja «Matriz Asistencia»',
     isDemo: true,
     icon: 'checkCircle',
   },

@@ -1,13 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { DEMO_STATS, MODULES_INFO } from '../../../infrastructure/state/demo-state';
 import { useParticipants } from '../../../application/hooks/useParticipants';
+import { useAttendance } from '../../../application/hooks/useAttendance';
 import { useConfig } from '../../../application/hooks/useConfig';
 import { Icon } from '../../components/common/Icon';
 
 export const DashboardPage: React.FC = () => {
   const { participants, loading, status, error, refresh } = useParticipants();
+  const {
+    sessions,
+    allRecords,
+    loading: attendanceLoading,
+    source: attendanceSource,
+    refreshAll: refreshAttendance,
+  } = useAttendance(participants);
   const { config, getSpreadsheetUrl } = useConfig();
+
+  const totalAttendanceMarks = useMemo(
+    () =>
+      Object.values(allRecords).reduce(
+        (acc, sessionRecords) => acc + Object.keys(sessionRecords).length,
+        0
+      ),
+    [allRecords]
+  );
 
   useEffect(() => {
     document.title = 'Panel principal - Innovathon Manager';
@@ -15,6 +32,7 @@ export const DashboardPage: React.FC = () => {
 
   const isParticipantsConnected = status.state === 'connected';
   const isPermissionDenied = status.errorType === 'PERMISSION_DENIED';
+  const isAttendanceConnected = attendanceSource === 'sheets';
 
   return (
     <>
@@ -30,6 +48,22 @@ export const DashboardPage: React.FC = () => {
       <section className="stats-grid" aria-label="Tarjetas de resumen">
         {DEMO_STATS.map((stat) => {
           const isParticipants = stat.id === 'participants';
+          const isAttendance = stat.id === 'attendance';
+          const isLive = isParticipants
+            ? isParticipantsConnected
+            : isAttendance
+              ? isAttendanceConnected
+              : false;
+          const isLoading = isParticipants
+            ? loading && participants.length === 0 && !isParticipantsConnected
+            : isAttendance
+              ? attendanceLoading && totalAttendanceMarks === 0 && !isAttendanceConnected
+              : false;
+          const liveValue = isParticipants ? participants.length : totalAttendanceMarks;
+          const liveSheet = isParticipants ? config.sheetName : config.attendanceSheetName;
+          const liveDetail = isParticipants
+            ? `${participants.length} participantes`
+            : `${sessions.length} sesiones · ${totalAttendanceMarks} marcas`;
 
           return (
             <div className="stat-card" id={`card-${stat.id}`} key={stat.id}>
@@ -48,6 +82,18 @@ export const DashboardPage: React.FC = () => {
                       <Icon name="refresh" />
                     </button>
                   )}
+                  {isAttendance && (
+                    <button
+                      className={`sync-btn ${attendanceLoading ? 'spinning' : ''}`}
+                      id="btn-sync-attendance"
+                      title="Sincronizar con la hoja de asistencias"
+                      type="button"
+                      onClick={() => refreshAttendance()}
+                      disabled={attendanceLoading}
+                    >
+                      <Icon name="refresh" />
+                    </button>
+                  )}
                   <div className="stat-card-icon">
                     <Icon name={stat.icon} />
                   </div>
@@ -55,11 +101,11 @@ export const DashboardPage: React.FC = () => {
               </div>
 
               <div className="stat-card-value" id={`val-${stat.id}`}>
-                {isParticipants ? (
-                  loading && participants.length === 0 && !isParticipantsConnected ? (
+                {isParticipants || isAttendance ? (
+                  isLoading ? (
                     <span style={{ fontSize: '1.25rem', opacity: 0.6 }}>Cargando...</span>
-                  ) : isParticipantsConnected ? (
-                    participants.length
+                  ) : isLive ? (
+                    liveValue
                   ) : (
                     '—'
                   )
@@ -69,32 +115,20 @@ export const DashboardPage: React.FC = () => {
               </div>
 
               <div className="stat-card-meta" id={`meta-${stat.id}`}>
-                {isParticipants ? (
-                  isParticipantsConnected ? (
-                    <>
-                      <span className="badge-live">En vivo</span>
-                      <span>
-                        Sincronizado con «{config.sheetName}» ({participants.length} participantes)
-                      </span>
-                    </>
-                  ) : status.state === 'error' || error ? (
-                    <>
-                      <span className="badge-warning">Alerta</span>
-                      <span>
-                        {isPermissionDenied ? 'Hoja privada en Drive' : 'Error de conexión'}
-                      </span>
-                    </>
+                {isParticipants || isAttendance ? (
+                  isLive ? (
+                    <span>
+                      Sincronizado con «{liveSheet}» ({liveDetail})
+                    </span>
+                  ) : isParticipants && (status.state === 'error' || error) ? (
+                    <span>
+                      {isPermissionDenied ? 'Hoja privada en Drive' : 'Error de conexión'}
+                    </span>
                   ) : (
-                    <>
-                      <span className="badge-demo">Demo</span>
-                      <span>{stat.note}</span>
-                    </>
+                    <span>Pendiente conexión hoja «{liveSheet}»</span>
                   )
                 ) : (
-                  <>
-                    <span className="badge-demo">Demo</span>
-                    <span>{stat.note}</span>
-                  </>
+                  <span>{stat.note}</span>
                 )}
               </div>
             </div>
@@ -190,8 +224,8 @@ export const DashboardPage: React.FC = () => {
                           </td>
                           <td>{p.equipo}</td>
                           <td>{p.rol}</td>
-                          <td>
-                            <span className="badge-live">Registrado</span>
+                          <td style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>
+                            Registrado
                           </td>
                         </tr>
                       ))}
