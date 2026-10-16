@@ -22,3 +22,7 @@ node_modules
 *.njsproj
 *.sln
 *.sw?
+
+# Sistema Comunicados (Google Apps Script): se mantiene SOLO en local, no se publica en GitHub
+Sistema Comunicados/
+
