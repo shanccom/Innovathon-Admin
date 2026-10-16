@@ -5,7 +5,8 @@ import {
   TestEmailResult,
 } from '../../domain/models/announcement.model';
 import { AnnouncementRepository } from '../../domain/repositories/announcement.repository';
-import { configRepository } from './local-storage-config.repository';
+// URL específica de la implementación de Google Apps Script proporcionada por el usuario
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQ26zi71Dvp0Yz7wluEj5X30gYrjOqGB1NaweJ7H0Vt6iaM84LmQ_kx4k35pa8RmEH/exec';
 import { localAnnouncementRepository } from './local-storage-announcement.repository';
 import { renderTemplate, textToHtml, htmlToPlainText, isValidEmail } from '../utils/text-formatter';
 
@@ -23,8 +24,6 @@ export class AppsScriptAnnouncementRepository implements AnnouncementRepository 
     destinatarioPrueba: string,
     muestra: AnnouncementRecipient
   ): Promise<TestEmailResult> {
-    const config = configRepository.getConfig();
-
     if (!isValidEmail(destinatarioPrueba)) {
       return {
         success: false,
@@ -33,13 +32,13 @@ export class AppsScriptAnnouncementRepository implements AnnouncementRepository 
       };
     }
 
-    // Renderizar plantilla para prueba
-    const renderedSubject = `[PRUEBA] ${renderTemplate(template.asunto, muestra)}`;
+    // Renderizar plantilla para prueba (mismo asunto que el envío oficial, sin prefijos)
+    const renderedSubject = renderTemplate(template.asunto, muestra);
     const renderedBody = renderTemplate(template.cuerpo, muestra);
     const renderedHtml = textToHtml(renderedBody, template.imagenBase64, template.imagenTipo);
     const plainText = htmlToPlainText(renderedHtml);
 
-    const appsScriptUrl = config.appsScriptUrl ? config.appsScriptUrl.trim() : '';
+    const appsScriptUrl = APPS_SCRIPT_URL;
 
     if (!appsScriptUrl) {
       return {
@@ -119,16 +118,20 @@ export class AppsScriptAnnouncementRepository implements AnnouncementRepository 
       ultimoCorreo: string;
       enviados: number;
       errores: number;
-    }) => void
+    }) => void,
+    opciones: { modoPrueba?: boolean } = {}
   ): Promise<AnnouncementCampaign> {
-    const config = configRepository.getConfig();
-    const appsScriptUrl = config.appsScriptUrl ? config.appsScriptUrl.trim() : '';
+    const appsScriptUrl = APPS_SCRIPT_URL;
 
-    if (!appsScriptUrl) {
-      throw new Error(
-        'No hay una URL de Google Apps Script configurada. Configura la Web App en «Configuración» antes de realizar envíos masivos.'
-      );
+    // Validación: asegurar que el nombre de campaña no esté vacío
+    if (!campanaNombre || campanaNombre.trim().length === 0) {
+      campanaNombre = `Comunicado - ${new Date().toLocaleString('es-MX', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      })}`;
     }
+
+    const modoPrueba = opciones.modoPrueba === true;
 
     // Preparar destinatarios renderizados
     const preparedBatch = destinatarios.map(d => ({
@@ -146,6 +149,7 @@ export class AppsScriptAnnouncementRepository implements AnnouncementRepository 
       template: {
         asunto: template.asunto,
         cuerpo: template.cuerpo,
+        modoPrueba: modoPrueba,
         imageBase64: template.imagenBase64,
         imageMimeType: template.imagenTipo,
       },

@@ -24,7 +24,7 @@ export const APPS_SCRIPT_ENDPOINTS = {
   /**
    * Endpoint para Comunicados masivos (Gmail API / Apps Script MailApp)
    */
-  announcements: 'https://script.google.com/macros/s/AKfycbxhYR57JU1ls9YBIGrV2whnxvehNJ2-nqvKuW60wN4OU1MiJXcLbjuJ9v8js97_wUsS/exec',
+  announcements: 'https://script.google.com/macros/s/AKfycbzQ26zi71Dvp0Yz7wluEj5X30gYrjOqGB1NaweJ7H0Vt6iaM84LmQ_kx4k35pa8RmEH/exec',
 } as const;
 
 /**

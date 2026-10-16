@@ -8,7 +8,12 @@ type ActiveTab = 'destinatarios' | 'redaccion' | 'previa' | 'envio' | 'historial
 export const AnnouncementsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('redaccion');
   const [testEmailInput, setTestEmailInput] = useState<string>('');
-  const [campaignNameInput, setCampaignNameInput] = useState<string>('');
+  const [campaignNameInput] = useState<string>(
+      `Comunicado - ${new Date().toLocaleString('es-MX', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      })}`
+    );
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [confirmKeyword, setConfirmKeyword] = useState<string>('');
   const [previewTabMode, setPreviewTabMode] = useState<'html' | 'text'>('html');
@@ -822,25 +827,7 @@ export const AnnouncementsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.35rem' }}>
-                  Nombre de la campaña (para historial y logs):
-                </label>
-                <input
-                  type="text"
-                  value={campaignNameInput}
-                  onChange={(e) => setCampaignNameInput(e.target.value)}
-                  placeholder="Ej: Recordatorio de Inscripción - Jornada 1"
-                  style={{
-                    width: '100%',
-                    padding: '0.65rem 0.85rem',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border-medium)',
-                  }}
-                />
-              </div>
-
-              {/* Advertencias antes del envío */}
+              {/* Advertencias antes del envío - Candado de seguridad anti-errores */}
               <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fef3c7', borderRadius: 'var(--radius-sm)', padding: '0.75rem', marginBottom: '1rem', fontSize: '0.8rem', color: '#92400e' }}>
                 <strong>Candado de seguridad anti-errores:</strong>
                 <div>

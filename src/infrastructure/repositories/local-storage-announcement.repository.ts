@@ -50,8 +50,8 @@ export class LocalStorageAnnouncementRepository implements AnnouncementRepositor
       };
     }
 
-    // Renderizar con datos de la muestra
-    const renderedSubject = `[PRUEBA] ${renderTemplate(template.asunto, muestra)}`;
+    // Renderizar con datos de la muestra (mismo asunto que el envío oficial, sin prefijos)
+    const renderedSubject = renderTemplate(template.asunto, muestra);
     const renderedBody = renderTemplate(template.cuerpo, muestra);
     const renderedHtml = textToHtml(renderedBody, template.imagenBase64, template.imagenTipo);
     const plainText = htmlToPlainText(renderedHtml);

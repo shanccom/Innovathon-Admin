@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { margin: 0; padding: 20px; font-size: 15px; line-height: 1.6; color: #202124; background: #fff; }
+    .hidden { display: none !important; }
+    .step { display: none; }
+    .step.active { display: block; }
+    h2 { font-size: 20px; margin: 0 0 6px; color: #1a73e8; font-weight: 600; }
+    .step-desc { color: #5f6368; font-size: 14px; margin: 0 0 20px; }
+    h3 { font-size: 16px; margin: 20px 0 8px; color: #3c4043; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; color: #3c4043; }
+    select, input[type="text"], textarea {
+      width: 100%; padding: 12px 14px; border: 2px solid #dadce0; border-radius: 8px;
+      font-size: 15px; margin-bottom: 16px; background: #fff;
+    }
+    select:focus, input[type="text"]:focus, textarea:focus {
+      outline: none; border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
+    }
+    textarea { min-height: 120px; resize: vertical; font-family: inherit; }
+    .btn {
+      padding: 14px 24px; border: none; border-radius: 8px; font-size: 15px;
+      font-weight: 600; cursor: pointer; margin: 4px 8px 4px 0; transition: all 0.15s;
+      min-height: 48px;
+    }
+    .btn-primary { background: #1a73e8; color: white; }
+    .btn-primary:hover { background: #1557b0; }
+    .btn-primary:disabled { background: #a8c7fa; cursor: not-allowed; }
+    .btn-secondary { background: #f1f3f4; color: #3c4043; }
+    .btn-secondary:hover { background: #e8eaed; }
+    .btn-danger { background: #ea4335; color: white; }
+    .btn-danger:hover { background: #c5221f; }
+    .btn-large { padding: 16px 32px; font-size: 16px; width: 100%; margin-top: 8px; }
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr 44px;
+      gap: 8px;
+      margin-bottom: 10px;
+      background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #e0e0e0;
+    }
+    .filter-row .filtro-campo { grid-column: 1; grid-row: 1; width: 100%; margin-bottom: 0; min-width: 0; }
+    .filter-row .filtro-operador { grid-column: 1 / -1; grid-row: 2; width: 100%; margin-bottom: 0; min-width: 0; }
+    .filter-row .filtro-valor { grid-column: 1 / -1; grid-row: 3; width: 100%; margin-bottom: 0; min-width: 0; }
+    .filter-row .btn-delete {
+      grid-column: 2; grid-row: 1; align-self: stretch;
+      width: 44px; height: auto; min-height: 0; padding: 0; margin: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .preview-card {
+      border: 1px solid #e0e0e0; border-radius: 12px; padding: 16px; margin-bottom: 16px;
+      background: #fafafa;
+    }
+    .preview-card h4 { margin: 0 0 8px; font-size: 15px; color: #1a73e8; }
+    .preview-card .meta { font-size: 13px; color: #5f6368; margin-bottom: 8px; }
+    .preview-card .body {
+      font-size: 14px; white-space: pre-wrap; background: white; padding: 12px;
+      border-radius: 8px; border: 1px solid #e0e0e0;
+    }
+    .progress-bar { height: 12px; background: #e0e0e0; border-radius: 6px; overflow: hidden; margin: 20px 0; }
+    .progress-fill { height: 100%; background: #1a73e8; width: 0%; transition: width 0.3s; border-radius: 6px; }
+    .status { padding: 16px; border-radius: 8px; margin: 16px 0; font-size: 15px; font-weight: 500; }
+    .status.success { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
+    .status.error { background: #fce8e6; color: #c5221f; border: 1px solid #fcd8d6; }
+    .status.info { background: #e8f0fe; color: #1a73e8; border: 1px solid #d2e3fc; }
+    .checkbox-label {
+      display: flex; align-items: center; gap: 10px; font-weight: 500;
+      margin: 16px 0; font-size: 15px; cursor: pointer;
+    }
+    .checkbox-label input[type="checkbox"] { width: 22px; height: 22px; }
+    .footer {
+      display: flex; justify-content: space-between; margin-top: 24px;
+      padding-top: 16px; border-top: 1px solid #e0e0e0; gap: 8px;
+    }
+    .footer .btn { flex: 1; }
+    .enviando-detalle { font-size: 13px; color: #5f6368; margin-top: 8px; text-align: center; }
+    .reanudar-info {
+      background: #e8f0fe; border: 1px solid #d2e3fc; color: #1a73e8;
+      padding: 16px; border-radius: 8px; margin: 16px 0; font-size: 15px;
+    }
+    .modo-banner {
+      padding: 16px; border-radius: 12px; margin: 16px 0; font-size: 16px;
+      font-weight: 600; text-align: center;
+    }
+    .modo-prueba { background: #e8f0fe; border: 2px solid #1a73e8; color: #1a73e8; }
+    .modo-real { background: #fce8e6; border: 2px solid #ea4335; color: #c5221f; }
+    .cuenta-info {
+      background: #f1f3f4; border: 1px solid #dadce0; border-radius: 8px;
+      padding: 14px; margin: 16px 0; font-size: 14px;
+    }
+    .cuenta-info strong { color: #1a73e8; }
+    .pendientes-info {
+      background: #fff3e0; border: 1px solid #ffcc80; border-radius: 8px;
+      padding: 14px; margin: 16px 0; font-size: 14px; color: #e65100;
+    }
+    .step-indicator { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+    .step-dot { width: 32px; height: 6px; border-radius: 3px; background: #e0e0e0; }
+    .step-dot.active { background: #1a73e8; }
+    .step-dot.done { background: #34a853; }
+    .imagen-section {
+      margin-top: 24px; padding: 20px; background: #f8f9fa;
+      border-radius: 12px; border: 2px solid #e0e0e0;
+    }
+    .imagen-section h3 { margin: 0 0 14px; }
+    .imagen-drop {
+      display: block; cursor: pointer; padding: 24px; text-align: center;
+      border: 2px dashed #dadce0; border-radius: 8px; background: #fff;
+      transition: border-color 0.2s;
+    }
+    .imagen-drop:hover { border-color: #1a73e8; }
+    .imagen-preview { text-align: center; }
+    .imagen-preview img {
+      max-width: 100%; max-height: 200px; border-radius: 8px;
+      border: 2px solid #e0e0e0;
+    }
+    .imagen-preview-buttons { margin-top: 12px; display: flex; gap: 8px; justify-content: center; }
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); display: flex; align-items: center;
+      justify-content: center; z-index: 1000;
+    }
+    .modal-box {
+      background: white; border-radius: 16px; padding: 32px;
+      max-width: 400px; width: 90%; text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .modal-box h3 { margin: 0 0 16px; font-size: 20px; color: #202124; }
+    .modal-box p { font-size: 16px; color: #5f6368; margin: 0 0 8px; }
+    .modal-box .modal-count { font-size: 32px; font-weight: 700; color: #1a73e8; margin: 8px 0; }
+    .modal-buttons { display: flex; gap: 12px; margin-top: 24px; }
+    .modal-buttons .btn { flex: 1; margin: 0; }
+    .count-highlight {
+      font-size: 22px; font-weight: 700; color: #137333;
+      background: #e6f4ea; padding: 14px 20px; border-radius: 12px;
+      text-align: center; margin: 16px 0; border: 2px solid #ceead6;
+    }
+    .count-highlight.zero { color: #c5221f; background: #fce8e6; border-color: #fcd8d6; }
+    .modo-opcion {
+      display: block; padding: 18px; border: 2px solid #dadce0; border-radius: 12px;
+      margin-bottom: 12px; cursor: pointer; transition: all 0.15s; background: #fff;
+    }
+    .modo-opcion:hover { border-color: #1a73e8; }
+    .modo-opcion.selected { border-color: #1a73e8; background: #e8f0fe; }
+    .modo-opcion input[type="radio"] { display: none; }
+    .modo-opcion-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .modo-opcion-desc { font-size: 13px; color: #5f6368; }
+    .resumen-box {
+      background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px;
+      padding: 16px; margin: 16px 0; font-size: 14px;
+    }
+    .resumen-box .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; }
+    .resumen-box .row:last-child { border-bottom: none; }
+    .resumen-box .row .label { color: #5f6368; }
+    .resumen-box .row .value { font-weight: 600; }
+    .hoja-info {
+      background: #e8f0fe; border: 1px solid #d2e3fc; border-radius: 8px;
+      padding: 10px 14px; font-size: 13px; color: #1a73e8; margin-bottom: 16px;
+      font-weight: 500;
+    }
+    .correo-selector {
+      background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 12px;
+      padding: 16px; margin-bottom: 16px;
+    }
+    .correo-selector label { margin-bottom: 8px; }
+    .correo-opcion {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border: 2px solid #dadce0; border-radius: 8px; margin-bottom: 8px;
+      cursor: pointer; transition: all 0.15s; background: #fff;
+    }
+    .correo-opcion:hover { border-color: #1a73e8; }
+    .correo-opcion.selected { border-color: #1a73e8; background: #e8f0fe; }
+    .correo-opcion input[type="radio"] { width: 18px; height: 18px; }
+    .correo-opcion-text { font-size: 14px; font-weight: 500; }
+    .exclusion-info {
+      background: #fff3e0; border: 1px solid #ffcc80; border-radius: 8px;
+      padding: 12px; margin: 12px 0; font-size: 13px; color: #e65100;
+    }
+    .vars-section {
+      background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px;
+      padding: 14px; margin-bottom: 16px;
+    }
+    .vars-section .vars-title {
+      font-size: 13px; font-weight: 600; color: #5f6368; margin-bottom: 8px;
+    }
+    .var-tag {
+      display: inline-block; background: #e8f0fe; color: #1a73e8;
+      padding: 4px 10px; border-radius: 12px; margin: 3px 4px 3px 0;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      border: 1px solid #d2e3fc; transition: all 0.15s;
+    }
+    .var-tag:hover { background: #1a73e8; color: white; border-color: #1a73e8; }
+    .var-tag-inserted { background: #137333; color: white; border-color: #137333; }
+  </style>
+</head>
+<body>
+
+  <!-- PASO 0: Conexión -->
+  <div id="step-conexion" class="step active">
+    <div class="step-indicator">
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <h2>🔌 Verificando conexión</h2>
+    <p class="step-desc">Comprobando que todo esté listo para enviar mensajes...</p>
+    <div class="status info" id="conexion-status">Espera un momento...</div>
+    <div class="footer">
+      <button class="btn btn-primary hidden" id="btn-reintentar-conexion">Intentar de nuevo</button>
+    </div>
+  </div>
+
+  <!-- PASO 1: ¿A quién enviar? -->
+  <div id="step-filtros" class="step">
+    <div class="step-indicator">
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <h2>👥 ¿A quién quieres enviar?</h2>
+    <div class="hoja-info" id="hoja-info">📋 Hoja de datos: Registros</div>
+
+    <div class="correo-selector" id="correo-selector">
+      <label>📧 ¿Qué correo utilizar?</label>
+      <div id="correo-opciones"></div>
+    </div>
+
+    <p class="step-desc">Selecciona los registros usando las condiciones de abajo.</p>
+
+    <div id="filtros-container"></div>
+
+    <button class="btn btn-secondary" id="btn-agregar-filtro">+ Agregar otra condición</button>
+
+    <div id="filtros-contador" class="count-highlight hidden">Se encontraron 0 personas</div>
+    <div id="filtros-exclusiones" class="exclusion-info hidden"></div>
+    <div class="status info" id="filtros-status">Agrega una condición para buscar registros</div>
+
+    <div class="footer">
+      <div></div>
+      <button class="btn btn-primary btn-large" id="btn-ir-mensaje" disabled>Ver mensaje →</button>
+    </div>
+  </div>
+
+  <!-- PASO 2: Escribir mensaje + imagen -->
+  <div id="step-mensaje" class="step">
+    <div class="step-indicator">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <h2>✏️ Escribe tu mensaje</h2>
+    <p class="step-desc">Personaliza el asunto y el texto que recibirán.</p>
+
+    <label>Asunto del correo</label>
+    <input type="text" id="input-asunto" placeholder="Ej: Bienvenida {{Nombres y apellidos}}">
+
+    <label>Texto del mensaje</label>
+    <textarea id="input-cuerpo" placeholder="Hola {{Nombres y apellidos}},&#10;&#10;Bienvenido a {{Institución de procedencia}}."></textarea>
+
+    <div class="vars-section" id="vars-section">
+      <div class="vars-title">📋 Campos disponibles — haz clic para insertar en el mensaje:</div>
+      <div id="vars-disponibles">Cargando campos...</div>
+    </div>
+
+    <div class="imagen-section">
+      <h3>🖼️ Agregar imagen (opcional)</h3>
+      <div id="imagen-upload">
+        <label class="imagen-drop">
+          <input type="file" id="input-imagen" accept="image/jpeg,image/png,image/gif" style="display: none;" onchange="manejarImagen(this)">
+          <div style="font-size: 16px; color: #5f6368; font-weight: 500;">Haz clic para elegir una imagen</div>
+          <div style="font-size: 13px; color: #80868b; margin-top: 6px;">JPG, PNG o GIF • Máximo 2 MB</div>
+        </label>
+      </div>
+      <div id="imagen-preview" class="imagen-preview" style="display: none;">
+        <img id="imagen-miniatura" src="" alt="Imagen seleccionada">
+        <div class="imagen-preview-buttons">
+          <button class="btn btn-secondary" id="btn-cambiar-imagen">Cambiar imagen</button>
+          <button class="btn btn-danger" id="btn-quitar-imagen">Quitar imagen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <button class="btn btn-secondary" id="btn-volver-filtros">← Volver</button>
+      <button class="btn btn-primary btn-large" id="btn-ir-previsualizar" style="flex:2;">Ver mensaje →</button>
+    </div>
+  </div>
+
+  <!-- PASO 3: Ver mensaje (vista previa) -->
+  <div id="step-previsualizar" class="step">
+    <div class="step-indicator">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+    </div>
+    <h2>👁️ Así se verá el mensaje</h2>
+    <p class="step-desc">Así es como llegará a cada persona:</p>
+
+    <div id="previas-container"></div>
+
+    <div id="imagen-preview-previa" style="display: none; margin-top: 16px; text-align: center;">
+      <p style="font-size: 14px; color: #5f6368; margin-bottom: 8px;">La imagen aparecerá al final del mensaje:</p>
+      <img id="imagen-miniatura-previa" src="" alt="Imagen del mensaje" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 2px solid #e0e0e0;">
+    </div>
+
+    <div class="footer">
+      <button class="btn btn-secondary" id="btn-volver-mensaje">← Volver</button>
+      <button class="btn btn-primary btn-large" id="btn-ir-confirmar" style="flex:2;">Enviar prueba →</button>
+    </div>
+  </div>
+
+  <!-- PASO 4: Enviar prueba o mensaje -->
+  <div id="step-modo" class="step">
+    <div class="step-indicator">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+    </div>
+    <h2>📤 ¿Cómo quieres enviar?</h2>
+    <p class="step-desc">Primero envía una prueba para verificar que todo se ve bien.</p>
+
+    <div id="modo-banner"></div>
+    <div class="cuenta-info" id="cuenta-info"></div>
+
+    <div id="opciones-modo">
+      <label class="modo-opcion selected" id="opcion-prueba">
+        <input type="radio" name="modo" id="radio-prueba" value="prueba" checked>
+        <div class="modo-opcion-title">📧 Enviar prueba</div>
+        <div class="modo-opcion-desc">Se envía solo a tu correo para que veas cómo queda.</div>
+      </label>
+
+      <label class="modo-opcion" id="opcion-real">
+        <input type="radio" name="modo" id="radio-real" value="real">
+        <div class="modo-opcion-title" style="color:#c5221f;">🚀 Enviar mensaje</div>
+        <div class="modo-opcion-desc">Se envía a todas las personas seleccionadas. No se puede deshacer.</div>
+      </label>
+    </div>
+
+    <label>Nombre de este envío</label>
+    <input type="text" id="input-campana-nombre" placeholder="Ej: Bienvenida Voluntarios Octubre">
+
+    <div id="resumen-modo"></div>
+
+    <label class="checkbox-label">
+      <input type="checkbox" id="check-confirmar">
+      <span id="confirmar-texto">Entiendo que esto enviará correos</span>
+    </label>
+
+    <div class="footer">
+      <button class="btn btn-secondary" id="btn-volver-previsualizar">← Volver</button>
+      <button class="btn btn-primary btn-large" id="btn-enviar" disabled style="flex:2;">Enviar prueba</button>
+    </div>
+  </div>
+
+  <!-- Confirmación modal envío real -->
+  <div id="modal-confirmacion" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3>⚠️ Confirmar envío</h3>
+      <p>Vas a enviar este mensaje a</p>
+      <div class="modal-count" id="modal-cantidad">0 personas</div>
+      <p style="font-size:13px; color:#c5221f; font-weight:600;">Esta acción no se puede deshacer.</p>
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" id="btn-modal-cancelar">Cancelar</button>
+        <button class="btn btn-danger" id="btn-modal-confirmar">Sí, enviar mensaje</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 5: Enviando -->
+  <div id="step-enviando" class="step">
+    <div class="step-indicator">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+    </div>
+    <h2>📤 Enviando...</h2>
+    <div class="modo-banner" id="enviando-modo"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progreso-barra"></div></div>
+    <div id="progreso-texto" style="text-align:center; font-size:16px; font-weight:600;">Preparando...</div>
+    <div class="enviando-detalle" id="enviando-detalles"></div>
+    <div id="pendientes-alerta" class="hidden"></div>
+  </div>
+
+  <!-- PASO 6: Resultado -->
+  <div id="step-resultado" class="step">
+    <div class="step-indicator">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+    </div>
+    <h2>✅ Resultado</h2>
+    <div id="resultado-final"></div>
+    <div class="footer">
+      <button class="btn btn-primary" id="btn-nueva-campana" style="flex:1;">Crear otro mensaje</button>
+    </div>
+  </div>
+
+<script>
+  let estado = {
+    campos: [],
+    operadores: [],
+    filtros: [],
+    destinatarios: 0,
+    excluidos: { sinCorreo: 0, invalidos: 0 },
+    previas: [],
+    campanaId: null,
+    tipoCampana: '',
+    asunto: '',
+    cuerpo: '',
+    reanudando: false,
+    modoPrueba: true,
+    cuentaUsuario: '',
+    cuotaRestante: 0,
+    limiteDiario: 100,
+    imagenBase64: null,
+    imagenTipo: null,
+    imagenNombre: null,
+    columnaCorreo: 'Correo institucional',
+    camposCorreo: ['Correo institucional', 'Correo personal'],
+    campoNombre: 'Nombres y apellidos',
+    hojaDatos: 'Registros',
+    totalRegistros: 0
+  };
+
+  let progresoPollInterval = null;
+  let contadorTimeout = null;
+
+  document.addEventListener('DOMContentLoaded', init);
+
+  function init() {
+    google.script.run
+      .withSuccessHandler(onDatosIniciales)
+      .withFailureHandler(err => mostrarErrorConexion(err))
+      .getDatosIniciales();
+  }
+
+  function mostrarErrorConexion(err) {
+    document.querySelector('#step-conexion .status').className = 'status error';
+    document.querySelector('#step-conexion .status').textContent =
+      'No se pudo conectar. Revisa que la hoja "Registros" exista y tenga datos.';
+    const btn = document.getElementById('btn-reintentar-conexion');
+    btn.classList.remove('hidden');
+    btn.onclick = () => location.reload();
+  }
+
+  function onDatosIniciales(data) {
+    estado.campos = data.campos || [];
+    estado.operadores = data.operadores || [];
+    estado.camposCorreo = data.camposCorreo || ['Correo institucional'];
+    estado.campoCorreoDefecto = data.campoCorreoDefecto || 'Correo institucional';
+    estado.campoNombre = data.campoNombre || 'Nombres y apellidos';
+    estado.hojaDatos = data.hojaDatos || 'Registros';
+    estado.totalRegistros = data.totalRegistros || 0;
+    estado.columnaCorreo = estado.camposCorreo[0] || estado.campoCorreoDefecto;
+
+    if (data.testConexion.ok) {
+      estado.cuentaUsuario = data.testConexion.usuario;
+      estado.cuotaRestante = data.testConexion.cuotaRestante;
+      estado.limiteDiario = data.testConexion.limiteDiario || 100;
+      document.getElementById('step-conexion').classList.remove('active');
+      document.getElementById('step-filtros').classList.add('active');
+      document.getElementById('hoja-info').textContent =
+        `📋 Hoja de datos: ${estado.hojaDatos} — ${estado.totalRegistros} registros`;
+      renderCorreoSelector();
+      renderFiltros();
+    } else {
+      mostrarErrorConexion(null);
+    }
+  }
+
+  // ========== SELECTOR DE CORREO ==========
+
+  function renderCorreoSelector() {
+    const container = document.getElementById('correo-opciones');
+    container.innerHTML = estado.camposCorreo.map(c => `
+      <label class="correo-opcion ${c === estado.columnaCorreo ? 'selected' : ''}">
+        <input type="radio" name="columna-correo" value="${c}" ${c === estado.columnaCorreo ? 'checked' : ''}>
+        <span class="correo-opcion-text">${c}</span>
+      </label>
+    `).join('');
+    container.querySelectorAll('input[name="columna-correo"]').forEach(radio => {
+      radio.onchange = () => {
+        estado.columnaCorreo = radio.value;
+        container.querySelectorAll('.correo-opcion').forEach(o => o.classList.remove('selected'));
+        radio.closest('.correo-opcion').classList.add('selected');
+        actualizarConteo();
+      };
+    });
+  }
+
+  // ========== FILTROS ==========
+
+  function renderFiltros() {
+    const container = document.getElementById('filtros-container');
+    container.innerHTML = '';
+    estado.filtros.forEach((f, i) => container.appendChild(crearFilaFiltro(f, i)));
+    actualizarConteo();
+  }
+
+  function crearFilaFiltro(filtro, index) {
+    const div = document.createElement('div');
+    div.className = 'filter-row';
+    const operadorTexto = {
+      'igual': 'es igual a',
+      'diferente': 'es diferente de',
+      'contiene': 'contiene',
+      'vacio': 'está vacío',
+      'no vacio': 'no está vacío'
+    };
+    div.innerHTML = `
+      <select class="filtro-campo">${estado.campos.map(c => `<option value="${escapeAttr(c)}" ${filtro.campo===c?'selected':''}>${escapeHtml(c)}</option>`).join('')}</select>
+      <select class="filtro-operador">${estado.operadores.map(o => `<option value="${o}" ${filtro.operador===o?'selected':''}>${operadorTexto[o] || o}</option>`).join('')}</select>
+      <input type="text" class="filtro-valor" placeholder="Valor" value="${escapeHtml(filtro.valor||'')}" ${(filtro.operador==='vacio'||filtro.operador==='no vacio')?'disabled':''}>
+      <button class="btn btn-danger btn-delete" title="Quitar esta condición">×</button>
+    `;
+    div.querySelector('.filtro-campo').onchange = () => actualizarFiltro(index);
+    div.querySelector('.filtro-operador').onchange = (e) => {
+      const input = div.querySelector('.filtro-valor');
+      input.disabled = e.target.value === 'vacio' || e.target.value === 'no vacio';
+      actualizarFiltro(index);
+    };
+    div.querySelector('.filtro-valor').oninput = () => actualizarFiltro(index);
+    div.querySelector('button').onclick = () => { estado.filtros.splice(index, 1); renderFiltros(); };
+    return div;
+  }
+
+  function actualizarFiltro(index) {
+    const filas = document.querySelectorAll('.filter-row');
+    const fila = filas[index];
+    if (!fila) return;
+    estado.filtros[index] = {
+      campo: fila.querySelector('.filtro-campo').value,
+      operador: fila.querySelector('.filtro-operador').value,
+      valor: fila.querySelector('.filtro-valor').value
+    };
+    actualizarConteo();
+  }
+
+  function filtrosIncompletos() {
+    const pendientes = [];
+    estado.filtros.forEach((f, i) => {
+      const requiereValor = f.operador === 'igual' || f.operador === 'diferente' || f.operador === 'contiene';
+      if (requiereValor && !String(f.valor || '').trim()) pendientes.push(i);
+    });
+    return pendientes;
+  }
+
+  function actualizarConteo() {
+    const contador = document.getElementById('filtros-contador');
+    const exclusiones = document.getElementById('filtros-exclusiones');
+    const status = document.getElementById('filtros-status');
+    const btn = document.getElementById('btn-ir-mensaje');
+
+    if (contadorTimeout) clearTimeout(contadorTimeout);
+
+    if (estado.filtros.length === 0) {
+      contador.classList.add('hidden');
+      exclusiones.classList.add('hidden');
+      status.textContent = 'Agrega una condición para buscar registros';
+      status.className = 'status info';
+      btn.disabled = true;
+      return;
+    }
+
+    const incompletos = filtrosIncompletos();
+    if (incompletos.length > 0) {
+      contador.classList.add('hidden');
+      exclusiones.classList.add('hidden');
+      status.textContent = incompletos.length === 1
+        ? `Escribe el valor de la condición ${incompletos[0] + 1} para buscar.`
+        : `Escribe el valor de ${incompletos.length} condiciones para buscar.`;
+      status.className = 'status info';
+      btn.disabled = true;
+      return;
+    }
+
+    status.textContent = 'Buscando registros...';
+    status.className = 'status info';
+
+    contadorTimeout = setTimeout(() => {
+      google.script.run
+        .withSuccessHandler(r => {
+          if (r.ok) {
+            estado.destinatarios = r.validos || 0;
+            estado.excluidos = { sinCorreo: r.sinCorreo || 0, invalidos: r.invalidos || 0 };
+            const validos = estado.destinatarios;
+            contador.textContent = `Se encontraron ${validos} ${validos === 1 ? 'persona' : 'personas'}`;
+            contador.classList.remove('hidden');
+            contador.className = validos > 0 ? 'count-highlight' : 'count-highlight zero';
+
+            const totalExcluidos = estado.excluidos.sinCorreo + estado.excluidos.invalidos;
+            if (totalExcluidos > 0) {
+              let partes = [];
+              if (estado.excluidos.sinCorreo > 0) partes.push(`${estado.excluidos.sinCorreo} sin correo en "${estado.columnaCorreo}"`);
+              if (estado.excluidos.invalidos > 0) partes.push(`${estado.excluidos.invalidos} con correo inválido`);
+              exclusiones.textContent = `⚠️ Se excluyen ${totalExcluidos}: ${partes.join(', ')}`;
+              exclusiones.classList.remove('hidden');
+            } else {
+              exclusiones.classList.add('hidden');
+            }
+
+            status.textContent = validos > 0
+              ? 'Listo. Puedes continuar escribiendo tu mensaje.'
+              : 'No se encontraron personas con esas condiciones y un correo válido.';
+            status.className = validos > 0 ? 'status success' : 'status error';
+            btn.disabled = validos === 0;
+          } else {
+            contador.classList.add('hidden');
+            exclusiones.classList.add('hidden');
+            status.textContent = traducirError(r.error);
+            status.className = 'status error';
+            btn.disabled = true;
+          }
+        })
+        .withFailureHandler(err => {
+          contador.classList.add('hidden');
+          exclusiones.classList.add('hidden');
+          status.textContent = 'No se pudo buscar. ' + (err && err.message ? err.message : err || 'Intenta de nuevo.');
+          status.className = 'status error';
+          btn.disabled = true;
+        })
+        .aplicarFiltrosUI(estado.filtros, estado.columnaCorreo);
+    }, 300);
+  }
+
+  document.getElementById('btn-agregar-filtro').onclick = () => {
+    if (estado.campos.length === 0) {
+      const status = document.getElementById('filtros-status');
+      status.textContent = 'No se pudieron leer las columnas de la hoja "Registros". Verifica que exista y tenga encabezados en la fila 1.';
+      status.className = 'status error';
+      return;
+    }
+    estado.filtros.push({ campo: estado.campos[0], operador: 'igual', valor: '' });
+    renderFiltros();
+  };
+
+  document.getElementById('btn-ir-mensaje').onclick = () => {
+    cambiarPaso('step-mensaje');
+    renderVarsDisponibles();
+  };
+
+  // ========== CAMPOS DISPONIBLES ==========
+
+  function renderVarsDisponibles() {
+    const container = document.getElementById('vars-disponibles');
+    container.innerHTML = estado.campos.map(c =>
+      `<span class="var-tag" onclick="insertarVariable('${escapeAttr(c)}')" title="Haz clic para insertar">{{${escapeHtml(c)}}}</span>`
+    ).join('');
+  }
+
+  function insertarVariable(campo) {
+    const textarea = document.getElementById('input-cuerpo');
+    const variable = `{{${campo}}}`;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const texto = textarea.value;
+    textarea.value = texto.substring(0, start) + variable + texto.substring(end);
+    textarea.focus();
+    textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+  }
+
+  // ========== IMAGEN ==========
+
+  function manejarImagen(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (!file.type.match(/^image\/(jpeg|png|gif)$/)) {
+      alert('Ese formato no funciona. Usa una imagen JPG, PNG o GIF.');
+      input.value = '';
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert('La imagen es muy grande (máximo 2 MB). Elige una más pequeña.');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      estado.imagenBase64 = e.target.result;
+      estado.imagenTipo = file.type;
+      estado.imagenNombre = file.name;
+      mostrarImagenPreview();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function mostrarImagenPreview() {
+    document.getElementById('imagen-upload').style.display = 'none';
+    document.getElementById('imagen-miniatura').src = estado.imagenBase64;
+    document.getElementById('imagen-preview').style.display = 'block';
+  }
+
+  function quitarImagen() {
+    estado.imagenBase64 = null;
+    estado.imagenTipo = null;
+    estado.imagenNombre = null;
+    document.getElementById('input-imagen').value = '';
+    document.getElementById('imagen-upload').style.display = 'block';
+    document.getElementById('imagen-preview').style.display = 'none';
+  }
+
+  document.getElementById('btn-cambiar-imagen').onclick = () => {
+    document.getElementById('input-imagen').click();
+  };
+
+  document.getElementById('btn-quitar-imagen').onclick = quitarImagen;
+
+  // ========== VER MENSAJE ==========
+
+  document.getElementById('btn-ir-previsualizar').onclick = () => {
+    const asunto = document.getElementById('input-asunto').value.trim();
+    const cuerpo = document.getElementById('input-cuerpo').value.trim();
+    if (!asunto) {
+      alert('Escribe un asunto para el correo.');
+      document.getElementById('input-asunto').focus();
+      return;
+    }
+    if (!cuerpo) {
+      alert('Escribe el texto del mensaje.');
+      document.getElementById('input-cuerpo').focus();
+      return;
+    }
+    estado.asunto = asunto;
+    estado.cuerpo = cuerpo;
+    google.script.run
+      .withSuccessHandler(onPrevisualizar)
+      .withFailureHandler(onError)
+      .previsualizarUI(estado.filtros, asunto, cuerpo, estado.imagenBase64, estado.imagenTipo, estado.columnaCorreo);
+  };
+
+  function onPrevisualizar(result) {
+    if (!result.ok) {
+      alert(traducirError(result.error));
+      return;
+    }
+    estado.previas = result.previas;
+    estado.destinatarios = result.totalDestinatarios;
+    estado.advertencias = result.advertencias || [];
+    if (result.excluidos) {
+      estado.excluidos = result.excluidos;
+    }
+    renderPrevias();
+    const imgPreview = document.getElementById('imagen-preview-previa');
+    const imgMiniatura = document.getElementById('imagen-miniatura-previa');
+    if (estado.imagenBase64) {
+      imgMiniatura.src = estado.imagenBase64;
+      imgPreview.style.display = 'block';
+    } else {
+      imgPreview.style.display = 'none';
+    }
+    cambiarPaso('step-previsualizar');
+  }
+
+  function renderPrevias() {
+    const container = document.getElementById('previas-container');
+    let avisos = '';
+    (estado.advertencias || []).forEach(adv => {
+      avisos += `<div class="status info" style="margin-bottom:8px;">⚠️ ${escapeHtml(adv)}</div>`;
+    });
+    if (estado.previas.length === 0) {
+      container.innerHTML = avisos + '<div class="status info">No hay personas para mostrar.</div>';
+      return;
+    }
+    container.innerHTML = avisos + estado.previas.map(p => `
+      <div class="preview-card">
+        <h4>${escapeHtml(p.nombreCompleto)}</h4>
+        <div class="meta">${escapeHtml(p.correo)}</div>
+        <div class="meta"><strong>Asunto:</strong> ${escapeHtml(p.asunto)}</div>
+        <div class="body">${escapeHtml(p.cuerpo)}</div>
+      </div>
+    `).join('');
+  }
+
+  // ========== MODO DE ENVÍO ==========
+
+  document.getElementById('btn-ir-confirmar').onclick = () => {
+    renderModoStep();
+    cambiarPaso('step-modo');
+  };
+
+  function renderModoStep() {
+    const total = estado.destinatarios;
+    const cuota = estado.cuotaRestante;
+    const limite = estado.limiteDiario;
+    const cuotaDesconocida = cuota < 0;
+    const seEnviaranAhora = cuotaDesconocida ? total : Math.min(total, Math.max(cuota, 0));
+    const pendientes = cuotaDesconocida ? 0 : Math.max(0, total - Math.max(cuota, 0));
+
+    const banner = document.getElementById('modo-banner');
+    banner.className = 'modo-banner modo-prueba';
+    banner.innerHTML = '📧 Enviar prueba — solo llega a tu correo';
+
+    document.getElementById('cuenta-info').innerHTML = `
+      <strong>Tu correo:</strong> ${escapeHtml(estado.cuentaUsuario)}<br>
+      <strong>Correo de destino:</strong> ${escapeHtml(estado.columnaCorreo)}<br>
+      <strong>Límite diario:</strong> ${limite} correos por día
+    `;
+
+    let resumenHtml = `
+      <div class="resumen-box">
+        <div class="row"><span class="label">Personas seleccionadas</span><span class="value">${total}</span></div>
+        <div class="row"><span class="label">Correo utilizado</span><span class="value">${escapeHtml(estado.columnaCorreo)}</span></div>
+        <div class="row"><span class="label">Correos disponibles hoy</span><span class="value">${cuotaDesconocida ? 'No se pudo verificar' : cuota}</span></div>
+        <div class="row"><span class="label">Se enviarán ahora</span><span class="value">${seEnviaranAhora}</span></div>
+      `;
+    if (pendientes > 0) {
+      resumenHtml += `<div class="row"><span class="label" style="color:#e65100">Quedarán pendientes</span><span class="value" style="color:#e65100">${pendientes}</span></div>`;
+    }
+    resumenHtml += `</div>`;
+
+    const totalExcluidos = (estado.excluidos.sinCorreo || 0) + (estado.excluidos.invalidos || 0);
+    if (totalExcluidos > 0) {
+      resumenHtml += `<div class="exclusion-info">⚠️ ${totalExcluidos} registros excluidos por problema con su correo en "${escapeHtml(estado.columnaCorreo)}".</div>`;
+    }
+    if (pendientes > 0) {
+      resumenHtml += `<div class="pendientes-info">⚠️ Hoy solo puedes enviar ${cuota} de ${total} correos. Los demás se enviarán cuando renueven tu límite.</div>`;
+    }
+
+    document.getElementById('resumen-modo').innerHTML = resumenHtml;
+
+    updateConfirmarTexto();
+    updateEnviarButton();
+  }
+
+  document.querySelectorAll('input[name="modo"]').forEach(radio => {
+    radio.onchange = () => {
+      estado.modoPrueba = radio.value === 'prueba';
+      document.getElementById('opcion-prueba').classList.toggle('selected', estado.modoPrueba);
+      document.getElementById('opcion-real').classList.toggle('selected', !estado.modoPrueba);
+      const banner = document.getElementById('modo-banner');
+      if (estado.modoPrueba) {
+        banner.className = 'modo-banner modo-prueba';
+        banner.innerHTML = '📧 Enviar prueba — solo llega a tu correo';
+      } else {
+        banner.className = 'modo-banner modo-real';
+        banner.innerHTML = '🚀 Enviar mensaje — llegará a todas las personas';
+      }
+      updateConfirmarTexto();
+      updateEnviarButton();
+    };
+  });
+
+  function updateConfirmarTexto() {
+    const texto = document.getElementById('confirmar-texto');
+    if (estado.modoPrueba) {
+      texto.textContent = 'Quiero recibir una prueba en mi correo';
+    } else {
+      texto.textContent = 'Entiendo que el mensaje se enviará a todas las personas';
+    }
+  }
+
+  function updateEnviarButton() {
+    const check = document.getElementById('check-confirmar');
+    const nombre = document.getElementById('input-campana-nombre').value.trim();
+    const btn = document.getElementById('btn-enviar');
+    btn.disabled = !check.checked || !nombre;
+    if (estado.modoPrueba) {
+      btn.textContent = '📧 Enviar prueba';
+      btn.className = 'btn btn-primary btn-large';
+    } else {
+      btn.textContent = '🚀 Enviar mensaje';
+      btn.className = 'btn btn-danger btn-large';
+    }
+  }
+
+  document.getElementById('check-confirmar').onchange = () => updateEnviarButton();
+  document.getElementById('input-campana-nombre').oninput = () => updateEnviarButton();
+
+  // ========== CONFIRMACIÓN MODAL ==========
+
+  document.getElementById('btn-enviar').onclick = () => {
+    if (!estado.modoPrueba) {
+      mostrarModalConfirmacion();
+    } else {
+      iniciarEnvio();
+    }
+  };
+
+  function mostrarModalConfirmacion() {
+    const total = estado.destinatarios;
+    document.getElementById('modal-cantidad').textContent =
+      `${total} ${total === 1 ? 'persona' : 'personas'}`;
+    document.getElementById('modal-confirmacion').classList.remove('hidden');
+  }
+
+  document.getElementById('btn-modal-cancelar').onclick = () => {
+    document.getElementById('modal-confirmacion').classList.add('hidden');
+  };
+
+  document.getElementById('btn-modal-confirmar').onclick = () => {
+    document.getElementById('modal-confirmacion').classList.add('hidden');
+    iniciarEnvio();
+  };
+
+  function iniciarEnvio() {
+    estado.reanudando = false;
+    cambiarPaso('step-enviando');
+    const asunto = document.getElementById('input-asunto').value.trim();
+    const cuerpo = document.getElementById('input-cuerpo').value.trim();
+    const tipoCampana = document.getElementById('input-campana-nombre').value.trim() || 'Envío sin nombre';
+    estado.tipoCampana = tipoCampana;
+    estado.asunto = asunto;
+    estado.cuerpo = cuerpo;
+
+    const banner = document.getElementById('enviando-modo');
+    if (estado.modoPrueba) {
+      banner.className = 'modo-banner modo-prueba';
+      banner.innerHTML = '📧 Enviando prueba a tu correo...';
+    } else {
+      banner.className = 'modo-banner modo-real';
+      banner.innerHTML = '🚀 Enviando mensaje a todas las personas...';
+    }
+
+    google.script.run
+      .withSuccessHandler(onEnviado)
+      .withFailureHandler(onError)
+      .ejecutarCampanaUI(estado.filtros, asunto, cuerpo, tipoCampana, estado.modoPrueba, estado.imagenBase64, estado.imagenTipo, estado.columnaCorreo);
+  }
+
+  function onEnviado(result) {
+    clearInterval(progresoPollInterval);
+    if (!result.ok) {
+      document.getElementById('progreso-texto').textContent = 'No se pudo enviar el mensaje.';
+      document.getElementById('progreso-texto').style.color = '#ea4335';
+      document.getElementById('enviando-detalles').textContent = traducirError(result.error);
+      return;
+    }
+    estado.campanaId = result.campanaId;
+    mostrarResultado(result);
+  }
+
+  // ========== RESULTADO ==========
+
+  function mostrarResultado(result) {
+    clearInterval(progresoPollInterval);
+    cambiarPaso('step-resultado');
+    const resumen = result.resumen || {
+      enviados: result.enviados,
+      errores: result.errores,
+      omitidos: result.omitidos,
+      pendientes: result.pendientes
+    };
+
+    let html = '';
+
+    if (estado.modoPrueba) {
+      html += `<div class="status success"><strong>✅ Prueba enviada</strong> — Revísala en tu correo</div>`;
+    } else {
+      html += `<div class="status success"><strong>✅ Mensaje enviado</strong> — ${resumen.enviados} personas lo recibieron</div>`;
+    }
+
+    html += `<div class="resumen-box">`;
+    html += `<div class="row"><span class="label">Enviados</span><span class="value" style="color:#137333">${resumen.enviados}</span></div>`;
+    html += `<div class="row"><span class="label">Errores</span><span class="value" style="color:${resumen.errores > 0 ? '#c5221f' : '#3c4043'}">${resumen.errores}</span></div>`;
+
+    if (resumen.omitidos > 0) {
+      html += `<div class="row"><span class="label">Omitidos</span><span class="value">${resumen.omitidos}</span></div>`;
+    }
+
+    if (result.pendientes && result.pendientes > 0) {
+      html += `<div class="row"><span class="label">Pendientes</span><span class="value" style="color:#e65100">${result.pendientes}</span></div>`;
+    }
+    html += `</div>`;
+
+    const excl = result.excluidos;
+    if (excl && (excl.sinCorreo > 0 || excl.invalidos > 0)) {
+      const totalExc = excl.sinCorreo + excl.invalidos;
+      html += `<div class="exclusion-info">⚠️ ${totalExc} registros excluidos por correo vacío o inválido en "${escapeHtml(estado.columnaCorreo)}".</div>`;
+    }
+
+    if (result.pendientes && result.pendientes > 0) {
+      html += `<div class="pendientes-info"><strong>Quedan ${result.pendientes} personas pendientes.</strong><br>
+        Tu límite diario se renueva en 24 horas. Crea la campaña de nuevo mañana para completar el envío.</div>`;
+    }
+
+    if (resumen.errores > 0) {
+      html += `<p style="color:#c5221f; font-size:14px;">Hay ${resumen.errores} mensajes que no se enviaron. Revisa los destinatarios en la hoja y vuelve a crear la campaña.</p>`;
+    }
+
+    (result.advertencias || []).forEach(adv => {
+      html += `<div class="exclusion-info">⚠️ ${escapeHtml(adv)}</div>`;
+    });
+
+    document.getElementById('resultado-final').innerHTML = html;
+  }
+
+  // ========== NAVEGACIÓN ==========
+
+  function cambiarPaso(id) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (id === 'step-enviando') {
+      iniciarProgresoVisual();
+    }
+  }
+
+  /**
+   * Barra de progreso visual mientras el script trabaja en el servidor.
+   * El envío es síncrono (google.script.run), así que no hay progreso real
+   * que consultar: la barra avanza de forma estimada hasta el 92%.
+   */
+  function iniciarProgresoVisual() {
+    if (progresoPollInterval) clearInterval(progresoPollInterval);
+    let avance = 5;
+    const barra = document.getElementById('progreso-barra');
+    barra.style.width = avance + '%';
+    document.getElementById('progreso-texto').textContent = 'Enviando... no cierres este panel.';
+    document.getElementById('enviando-detalles').textContent = 'El envío puede tardar hasta 6 minutos.';
+    progresoPollInterval = setInterval(() => {
+      if (avance >= 92) return;
+      avance += Math.max(1, Math.round((92 - avance) / 12));
+      barra.style.width = avance + '%';
+    }, 1500);
+  }
+
+  document.getElementById('btn-volver-filtros').onclick = () => cambiarPaso('step-filtros');
+  document.getElementById('btn-volver-mensaje').onclick = () => cambiarPaso('step-mensaje');
+  document.getElementById('btn-volver-previsualizar').onclick = () => cambiarPaso('step-previsualizar');
+  document.getElementById('btn-nueva-campana').onclick = () => location.reload();
+
+  // ========== UTILIDADES ==========
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+  }
+
+  function escapeAttr(text) {
+    return String(text || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function traducirError(error) {
+    if (!error) return 'Ocurrió un problema. Intenta de nuevo.';
+    const e = String(error).toLowerCase();
+
+    if (e.includes('problema con los filtros') || e.includes('valor requerido') || e.includes('operador') || (e.includes('filtro') && e.includes('campo')))
+      return 'Revisa las condiciones de búsqueda: completa el campo, el operador y el valor. (' + error + ')';
+    if (e.includes('no corresponde a ningún campo') || e.includes('datos personalizados incorrectos'))
+      return 'Hay un dato personalizado que no existe en la hoja. Usa los botones de campos disponibles. (' + error + ')';
+    if (e.includes('no se encontraron registros') || e.includes('ninguna persona tiene un correo válido'))
+      return error;
+    if (e.includes('email') || e.includes('correo') || e.includes('invalid'))
+      return 'Hay una persona con un correo incorrecto. Revisa sus datos en la hoja.';
+    if (e.includes('quota') || e.includes('cuota') || e.includes('limit'))
+      return 'Se agotó el límite diario de correos. Intenta mañana o reduce la cantidad.';
+    if (e.includes('lock') || e.includes('bloquead'))
+      return 'Otro envío está en curso. Espera unos segundos y vuelve a intentar.';
+    if (e.includes('permission') || e.includes('permiso') || e.includes('acceso'))
+      return 'No hay permisos suficientes. Revisa que la hoja tenga los datos correctos.';
+    if (e.includes('timeout') || e.includes('tiempo'))
+      return 'El envío tardó demasiado. Puedes continuar desde donde se quedó.';
+    if (e.includes('headers') || e.includes('columnas') || e.includes('faltan'))
+      return error;
+    if (e.includes('no existe') || e.includes('not found') || e.includes('no encontrada'))
+      return 'No se encontró la hoja "Registros". Verifica que exista en el archivo. (' + error + ')';
+    if (e.includes('sheet') || e.includes('hoja'))
+      return 'Hubo un problema con la hoja de cálculo. Verifica que tenga los datos correctos. (' + error + ')';
+
+    return 'Ocurrió un problema. Intenta de nuevo o recarga la página. Detalle: ' + error;
+  }
+
+  function onError(err) {
+    clearInterval(progresoPollInterval);
+    alert(traducirError(err && err.message ? err.message : err));
+  }
+</script>
+</body>
+</html>
