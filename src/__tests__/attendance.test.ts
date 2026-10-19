@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LocalStorageAttendanceRepository } from '../infrastructure/repositories/local-storage-attendance.repository';
 import { ManageAttendanceUseCase } from '../application/use-cases/manage-attendance.use-case';
-import { normalizeAttendanceCode } from '../application/hooks/useAttendance';
+import { normalizeAttendanceCode, buildFromMatrix } from '../application/hooks/useAttendance';
 import {
   DEFAULT_ATTENDANCE_SESSIONS,
   MIN_ATTENDANCE_FOR_CERTIFICATE,
@@ -67,6 +67,48 @@ describe('Attendance Module - 6 Sessions & Contingency Workflow', () => {
       expect(normalizeAttendanceCode(' José ')).toBe('JOSE');
       expect(normalizeAttendanceCode(null)).toBe('');
       expect(normalizeAttendanceCode(undefined)).toBe('');
+    });
+
+    it('should ignore non-session columns like col_9, Total, and empty headers', () => {
+      const mockMatrix = {
+        headers: [
+          'Código',
+          'Nombres y apellidos',
+          'Asistencia 1',
+          'Asistencia 2',
+          'Asistencia 3',
+          'Asistencia 4',
+          'Asistencia 5',
+          'Asistencia 6',
+          'Total',
+          'col_9',
+          '',
+        ],
+        data: [
+          {
+            'Código': 'IM-2026-0001',
+            'Nombres y apellidos': 'Ana Maria',
+            'Asistencia 1': 'TRUE',
+            'Total': '1',
+            'col_9': '',
+          },
+        ],
+      };
+
+      const { sessions, allRecords } = buildFromMatrix(mockMatrix);
+
+      // Must strictly yield the 6 hackathon sessions, never col_9 or Total
+      expect(sessions).toHaveLength(6);
+      expect(sessions.map((s) => s.id)).toEqual([
+        'dia-1-manana',
+        'dia-1-tarde',
+        'dia-2-manana',
+        'dia-2-tarde',
+        'dia-3-manana',
+        'dia-3-tarde',
+      ]);
+      expect(sessions.some((s) => s.id === 'col_9' || s.name === 'col_9')).toBe(false);
+      expect(allRecords['dia-1-manana']['IM-2026-0001']?.status).toBe('present');
     });
   });
 

@@ -103,10 +103,14 @@ export class AppsScriptAttendanceClient {
       const table = parsed.table;
       if (!table || !Array.isArray(table.cols)) return null;
 
-      const cols = table.cols.map((c, idx) => ({
-        label: c && c.label ? String(c.label).trim() : `col_${idx}`,
-        type: c && c.type ? String(c.type) : 'string',
-      }));
+      const cols = table.cols
+        .map((c, idx) => ({
+          label: c && c.label ? String(c.label).trim() : '',
+          type: c && c.type ? String(c.type) : 'string',
+          idx,
+        }))
+        .filter((c) => c.label.length > 0 && !/^col_\d+$/i.test(c.label));
+
       const headers = cols.map((c) => c.label);
 
       const data: Array<Record<string, string>> = [];
@@ -114,8 +118,8 @@ export class AppsScriptAttendanceClient {
         if (!row || !row.c) return;
         const item: Record<string, string> = {};
         let hasValue = false;
-        cols.forEach((col, idx) => {
-          const cell = row.c?.[idx] ?? null;
+        cols.forEach((col) => {
+          const cell = row.c?.[col.idx] ?? null;
           let value = '';
           if (cell) {
             if (col.type === 'boolean') {

@@ -48,13 +48,19 @@ function isMarked(value: unknown): boolean {
  * Convierte la matriz oficial (encabezados + filas) en sesiones y registros.
  * Mapea las columnas ("Asistencia 1" .. "6") a las sesiones oficiales ("dia-1-manana", etc.)
  */
-function buildFromMatrix(matrix: AttendanceMatrix): {
+export function buildFromMatrix(matrix: AttendanceMatrix): {
   sessions: AttendanceSession[];
   allRecords: AttendanceSessionMap;
 } {
-  const sessionNames = matrix.headers.filter(
-    (h) => h && !NON_SESSION_HEADERS.has(normalizeAttendanceCode(h))
-  );
+  const sessionNames = matrix.headers
+    .filter((h) => {
+      if (!h || !h.trim()) return false;
+      const norm = normalizeAttendanceCode(h);
+      if (NON_SESSION_HEADERS.has(norm)) return false;
+      if (/^COL_\d+$/i.test(norm)) return false;
+      return true;
+    })
+    .slice(0, DEFAULT_ATTENDANCE_SESSIONS.length);
 
   const sessions: AttendanceSession[] = sessionNames.map((name, i) => {
     const config = DEFAULT_ATTENDANCE_SESSIONS[i];
