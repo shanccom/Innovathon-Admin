@@ -164,12 +164,12 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
       const sessions = useCase.getSessions();
       expect(sessions).toHaveLength(6);
       expect(sessions.map(s => s.name)).toEqual([
-        'Asistencia 1',
-        'Asistencia 2',
-        'Asistencia 3',
-        'Asistencia 4',
-        'Asistencia 5',
-        'Asistencia 6',
+        'Día 1 - Mañana',
+        'Día 1 - Tarde',
+        'Día 2 - Mañana',
+        'Día 2 - Tarde',
+        'Día 3 - Mañana',
+        'Día 3 - Tarde',
       ]);
 
       // Add 7th session
@@ -187,46 +187,46 @@ describe('Clean Architecture - Domain & Infrastructure Verification', () => {
       const repo = new LocalStorageAttendanceRepository();
       const useCase = new ManageAttendanceUseCase(repo);
 
-      expect(useCase.getBySession('asistencia-1')).toEqual({});
+      expect(useCase.getBySession('dia-1-manana')).toEqual({});
 
       // Toggle to present
-      const firstStatus = useCase.toggle('asistencia-1', 'p-1');
+      const firstStatus = useCase.toggle('dia-1-manana', 'p-1');
       expect(firstStatus).toBe('present');
 
-      const s1Records = useCase.getBySession('asistencia-1');
+      const s1Records = useCase.getBySession('dia-1-manana');
       expect(s1Records['p-1'].status).toBe('present');
       expect(s1Records['p-1'].timestamp).toBeDefined();
 
       // Toggle back to absent
-      const secondStatus = useCase.toggle('asistencia-1', 'p-1', 'present');
+      const secondStatus = useCase.toggle('dia-1-manana', 'p-1', 'present');
       expect(secondStatus).toBe('absent');
-      expect(useCase.getBySession('asistencia-1')['p-1'].status).toBe('absent');
+      expect(useCase.getBySession('dia-1-manana')['p-1'].status).toBe('absent');
     });
 
     it('should maintain independent records across different sessions', () => {
       const repo = new LocalStorageAttendanceRepository();
       const useCase = new ManageAttendanceUseCase(repo);
 
-      useCase.toggle('asistencia-1', 'p-1');
-      useCase.toggle('asistencia-2', 'p-2');
+      useCase.toggle('dia-1-manana', 'p-1');
+      useCase.toggle('dia-1-tarde', 'p-2');
 
-      expect(useCase.getBySession('asistencia-1')['p-1']?.status).toBe('present');
-      expect(useCase.getBySession('asistencia-1')['p-2']).toBeUndefined();
+      expect(useCase.getBySession('dia-1-manana')['p-1']?.status).toBe('present');
+      expect(useCase.getBySession('dia-1-manana')['p-2']).toBeUndefined();
 
-      expect(useCase.getBySession('asistencia-2')['p-2']?.status).toBe('present');
-      expect(useCase.getBySession('asistencia-2')['p-1']).toBeUndefined();
+      expect(useCase.getBySession('dia-1-tarde')['p-2']?.status).toBe('present');
+      expect(useCase.getBySession('dia-1-tarde')['p-1']).toBeUndefined();
     });
 
     it('should clear records for a specific session without affecting others', () => {
       const repo = new LocalStorageAttendanceRepository();
       const useCase = new ManageAttendanceUseCase(repo);
 
-      useCase.toggle('asistencia-1', 'p-1');
-      useCase.toggle('asistencia-2', 'p-2');
+      useCase.toggle('dia-1-manana', 'p-1');
+      useCase.toggle('dia-1-tarde', 'p-2');
 
-      useCase.clearSession('asistencia-1');
-      expect(useCase.getBySession('asistencia-1')).toEqual({});
-      expect(useCase.getBySession('asistencia-2')['p-2']?.status).toBe('present');
+      useCase.clearSession('dia-1-manana');
+      expect(useCase.getBySession('dia-1-manana')).toEqual({});
+      expect(useCase.getBySession('dia-1-tarde')['p-2']?.status).toBe('present');
     });
   });
 

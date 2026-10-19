@@ -5,6 +5,8 @@ import { useAttendance, normalizeAttendanceCode } from '../../../application/hoo
 import { useConfig } from '../../../application/hooks/useConfig';
 import { AttendanceSessionMap } from '../../../domain/models/attendance.model';
 import { Icon } from '../../components/common/Icon';
+import { AttendanceQrModal } from '../../components/attendance/AttendanceQrModal';
+import { MIN_ATTENDANCE_FOR_CERTIFICATE } from '../../../infrastructure/config/attendance-forms.config';
 
 const PAGE_SIZE = 8;
 
@@ -22,10 +24,19 @@ export const AttendancePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'present' | 'pending'>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isQrModalOpen, setIsQrModalOpen] = useState<boolean>(false);
 
   const { participants, loading, status, refresh } = useParticipants();
-  const { sessions, activeSessionId, setActiveSessionId, records, allRecords, source, refreshAll } =
-    useAttendance(participants);
+  const {
+    sessions,
+    activeSessionId,
+    setActiveSessionId,
+    records,
+    allRecords,
+    source,
+    refreshAll,
+    markManualAttendance,
+  } = useAttendance(participants);
   const { config, getSpreadsheetUrl } = useConfig();
 
   const handleRefresh = () => {
@@ -106,12 +117,35 @@ export const AttendancePage: React.FC = () => {
           </h1>
           <p className="page-subtitle" style={{ color: '#64748B', fontSize: '0.875rem', marginTop: '0.2rem' }}>
             {source === 'sheets'
-              ? 'Panel de solo lectura. Asistencia sincronizada desde la matriz del formulario de check-in.'
-              : 'Panel de solo lectura. Esperando la matriz de asistencias del formulario.'}
+              ? 'Asistencia en tiempo real sincronizada desde Google Forms y la matriz oficial de Google Sheets.'
+              : 'Asistencia en modo local (esperando conexión con la matriz de Google Sheets).'}
           </p>
         </div>
 
         <div className="page-actions" style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button
+            type="button"
+            onClick={() => setIsQrModalOpen(true)}
+            className="btn btn-primary btn-sm"
+            style={{
+              borderRadius: '8px',
+              padding: '0.5rem 0.95rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              backgroundColor: '#4F46E5',
+              borderColor: '#4F46E5',
+              color: '#FFFFFF',
+              boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)',
+            }}
+            title="Proyectar código QR oficial en el ecran del auditorio para escaneo de participantes"
+          >
+            <Icon name="scan" size={16} />
+            <span>Proyectar QR</span>
+          </button>
+
           <button
             type="button"
             onClick={handleRefresh}
@@ -424,17 +458,24 @@ export const AttendancePage: React.FC = () => {
                     <th style={{ textAlign: 'center' }}>Sesión ({activeSession?.name})</th>
                     <th style={{ textAlign: 'center' }}>Total Asistencias</th>
                     <th>Estado</th>
+                    <th style={{ textAlign: 'center' }}>Contingencia</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pageItems.map((p) => {
-                    const key = normalizeAttendanceCode(p.codigo);
-                    const att = records[key];
+                    const keyCod = normalizeAttendanceCode(p.codigo);
+                    const keyDni = normalizeAttendanceCode(p.dni);
+                    const att = records[keyCod] || records[keyDni];
                     const isPresent = att && att.status === 'present';
 
                     const totalAsistenciasParticipant = sessions.filter(
-                      (s) => (allRecords as AttendanceSessionMap)[s.id]?.[key]?.status === 'present'
+                      (s) => {
+                        const sMap = (allRecords as AttendanceSessionMap)[s.id];
+                        return sMap?.[keyCod]?.status === 'present' || sMap?.[keyDni]?.status === 'present';
+                      }
                     ).length;
+
+                    const isCertified = totalAsistenciasParticipant >= MIN_ATTENDANCE_FOR_CERTIFICATE;
 
                     return (
                       <tr key={p.id}>
@@ -473,10 +514,11 @@ export const AttendancePage: React.FC = () => {
                               borderRadius: '12px',
                               fontSize: '0.85rem',
                               fontWeight: 700,
-                              backgroundColor: totalAsistenciasParticipant > 0 ? '#ecfdf5' : 'var(--bg-card)',
-                              color: totalAsistenciasParticipant > 0 ? '#047857' : 'var(--text-muted)',
-                              border: `1px solid ${totalAsistenciasParticipant > 0 ? '#a7f3d0' : 'var(--border-light)'}`,
+                              backgroundColor: totalAsistenciasParticipant > 0 ? (isCertified ? '#ecfdf5' : '#f0fdf4') : 'var(--bg-card)',
+                              color: totalAsistenciasParticipant > 0 ? (isCertified ? '#047857' : '#15803d') : 'var(--text-muted)',
+                              border: `1px solid ${totalAsistenciasParticipant > 0 ? (isCertified ? '#6ee7b7' : '#a7f3d0') : 'var(--border-light)'}`,
                             }}
+                            title={isCertified ? 'Apto para certificado (≥5 de 6)' : `${totalAsistenciasParticipant} de ${sessions.length} asistencias`}
                           >
                             {totalAsistenciasParticipant} / {sessions.length}
                           </span>
@@ -487,6 +529,27 @@ export const AttendancePage: React.FC = () => {
                           ) : (
                             <span style={{ color: 'var(--text-muted)' }}>Pendiente</span>
                           )}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={() => markManualAttendance(activeSessionId, p.codigo, p.dni)}
+                            className={`btn btn-sm ${isPresent ? 'btn-secondary' : 'btn-primary'}`}
+                            style={{
+                              fontSize: '0.72rem',
+                              padding: '0.25rem 0.55rem',
+                              borderRadius: '6px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                            }}
+                            title={
+                              isPresent
+                                ? 'Haga clic para desmarcar asistencia manual'
+                                : 'Marcar asistencia manual de contingencia (sin batería/conexión)'
+                            }
+                          >
+                            {isPresent ? 'Desmarcar' : 'Check-in'}
+                          </button>
                         </td>
                       </tr>
                     );
@@ -566,6 +629,15 @@ export const AttendancePage: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Modal de Proyección de Código QR */}
+      <AttendanceQrModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        activeSessionId={activeSessionId}
+        sessions={sessions}
+        onSelectSession={(id) => setActiveSessionId(id)}
+      />
     </>
   );
 };

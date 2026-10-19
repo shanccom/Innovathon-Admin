@@ -64,11 +64,13 @@ function buildFromMatrix(matrix: AttendanceMatrix): {
   });
 
   matrix.data.forEach((row) => {
-    const code = normalizeAttendanceCode(row['Código'] ?? row['codigo'] ?? '');
-    if (!code) return;
+    const code = normalizeAttendanceCode(row['Código'] ?? row['codigo'] ?? row['Codigo'] ?? '');
+    const dni = normalizeAttendanceCode(row['DNI'] ?? row['dni'] ?? row['Documento'] ?? '');
     sessionNames.forEach((name) => {
       if (isMarked(row[name])) {
-        allRecords[name][code] = { status: 'present', timestamp: '' };
+        const rec: AttendanceRecord = { status: 'present', timestamp: '' };
+        if (code) allRecords[name][code] = rec;
+        if (dni) allRecords[name][dni] = rec;
       }
     });
   });
@@ -81,7 +83,7 @@ export function useAttendance(_participants: Participant[] = [], initialSessionI
   const [activeSessionId, setActiveSessionId] = useState<string>(() => {
     const all = manageAttendanceUseCase.getSessions();
     if (initialSessionId && all.some((s) => s.id === initialSessionId)) return initialSessionId;
-    return all[0]?.id || 'asistencia-1';
+    return all[0]?.id || 'dia-1-manana';
   });
   const [allRecords, setAllRecords] = useState<AttendanceSessionMap>(() => manageAttendanceUseCase.getAll());
   const [records, setRecords] = useState<Record<string, AttendanceRecord>>(
@@ -93,7 +95,19 @@ export function useAttendance(_participants: Participant[] = [], initialSessionI
   const applyMatrix = useCallback((matrix: AttendanceMatrix) => {
     const { sessions: nextSessions, allRecords: nextRecords } = buildFromMatrix(matrix);
     setSessions(nextSessions);
-    setAllRecords(nextRecords);
+    // Combina los registros de Sheets con cualquier marca local manual de respaldo
+    setAllRecords((prev) => {
+      const merged: AttendanceSessionMap = { ...nextRecords };
+      Object.keys(prev).forEach((sId) => {
+        if (!merged[sId]) merged[sId] = {};
+        Object.keys(prev[sId] || {}).forEach((pKey) => {
+          if (prev[sId][pKey]?.status === 'present' && !merged[sId][pKey]) {
+            merged[sId][pKey] = prev[sId][pKey];
+          }
+        });
+      });
+      return merged;
+    });
     setActiveSessionId((prev) =>
       nextSessions.some((s) => s.id === prev) ? prev : nextSessions[0]?.id || prev
     );
@@ -114,6 +128,32 @@ export function useAttendance(_participants: Participant[] = [], initialSessionI
     }
   }, [applyMatrix]);
 
+  const markManualAttendance = useCallback(
+    (sessionId: string, participantCode: string, participantDni?: string) => {
+      const cleanCode = normalizeAttendanceCode(participantCode);
+      const cleanDni = participantDni ? normalizeAttendanceCode(participantDni) : '';
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      manageAttendanceUseCase.toggle(sessionId, cleanCode);
+
+      setAllRecords((prev) => {
+        const currentSession = { ...(prev[sessionId] || {}) };
+        const isCurrentlyPresent = currentSession[cleanCode]?.status === 'present';
+        const nextStatus = isCurrentlyPresent ? 'absent' : 'present';
+        const nextRecord: AttendanceRecord = { status: nextStatus, timestamp: now };
+
+        currentSession[cleanCode] = nextRecord;
+        if (cleanDni) currentSession[cleanDni] = nextRecord;
+
+        return {
+          ...prev,
+          [sessionId]: currentSession,
+        };
+      });
+    },
+    []
+  );
+
   useEffect(() => {
     refreshAll();
   }, [refreshAll]);
@@ -131,5 +171,6 @@ export function useAttendance(_participants: Participant[] = [], initialSessionI
     loading,
     source,
     refreshAll,
+    markManualAttendance,
   };
 }

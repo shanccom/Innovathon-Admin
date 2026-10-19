@@ -10,12 +10,12 @@ const ATTENDANCE_STORAGE_KEY = 'innovathon_attendance_records';
 const SESSIONS_STORAGE_KEY = 'innovathon_attendance_sessions';
 
 const DEFAULT_SESSIONS: AttendanceSession[] = [
-  { id: 'asistencia-1', name: 'Asistencia 1', createdAt: 1 },
-  { id: 'asistencia-2', name: 'Asistencia 2', createdAt: 2 },
-  { id: 'asistencia-3', name: 'Asistencia 3', createdAt: 3 },
-  { id: 'asistencia-4', name: 'Asistencia 4', createdAt: 4 },
-  { id: 'asistencia-5', name: 'Asistencia 5', createdAt: 5 },
-  { id: 'asistencia-6', name: 'Asistencia 6', createdAt: 6 },
+  { id: 'dia-1-manana', name: 'Día 1 - Mañana', createdAt: 1 },
+  { id: 'dia-1-tarde', name: 'Día 1 - Tarde', createdAt: 2 },
+  { id: 'dia-2-manana', name: 'Día 2 - Mañana', createdAt: 3 },
+  { id: 'dia-2-tarde', name: 'Día 2 - Tarde', createdAt: 4 },
+  { id: 'dia-3-manana', name: 'Día 3 - Mañana', createdAt: 5 },
+  { id: 'dia-3-tarde', name: 'Día 3 - Tarde', createdAt: 6 },
 ];
 
 export class LocalStorageAttendanceRepository implements AttendanceRepository {
@@ -26,7 +26,10 @@ export class LocalStorageAttendanceRepository implements AttendanceRepository {
         if (raw) {
           const parsed = JSON.parse(raw) as AttendanceSession[];
           if (Array.isArray(parsed) && parsed.length >= 6) {
-            return parsed;
+            const hasLegacyDefaults = parsed.some(s => s.id === 'asistencia-1' || s.name === 'Asistencia 1');
+            if (!hasLegacyDefaults) {
+              return parsed;
+            }
           }
         }
       }
