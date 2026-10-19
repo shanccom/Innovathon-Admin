@@ -123,10 +123,13 @@ export function getEffectiveFormUrl(session: AttendanceSessionConfig): string {
   return customUrls[session.id] || customUrls[session.name] || session.defaultFormUrl;
 }
 
+const recentFormSubmissions = new Map<string, number>();
+
 /**
  * Envía la asistencia en segundo plano directamente al Google Form oficial
  * correspondiente a la sesión seleccionada (usando mode: 'no-cors' para evitar bloqueos del navegador).
  * De esta manera, el check-in manual impacta tanto en la Web como en Google Sheets.
+ * Incluye protección contra doble envío (deduplicación en ventana de 5s).
  */
 export async function submitManualAttendanceToForm(
   sessionId: string,
@@ -134,6 +137,17 @@ export async function submitManualAttendanceToForm(
   name?: string
 ): Promise<boolean> {
   if (!dni) return false;
+  const cleanDni = dni.trim();
+  const submissionKey = `${sessionId}_${cleanDni}`;
+  const now = Date.now();
+  const lastTime = recentFormSubmissions.get(submissionKey);
+
+  // Evitar envíos duplicados si se ejecutó hace menos de 5 segundos
+  if (lastTime && now - lastTime < 5000) {
+    return true;
+  }
+  recentFormSubmissions.set(submissionKey, now);
+
   const config =
     DEFAULT_ATTENDANCE_SESSIONS.find(
       (s) =>

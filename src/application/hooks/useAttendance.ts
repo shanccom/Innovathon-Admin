@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AttendanceRecord, AttendanceSession, AttendanceSessionMap } from '../../domain/models/attendance.model';
 import { Participant } from '../../domain/models/participant.model';
 import { manageAttendanceUseCase } from '../use-cases/manage-attendance.use-case';
@@ -106,6 +106,12 @@ export function useAttendance(_participants: Participant[] = [], initialSessionI
   const [loading, setLoading] = useState<boolean>(false);
   const [source, setSource] = useState<'local' | 'sheets'>('local');
 
+  const allRecordsRef = useRef(allRecords);
+  useEffect(() => {
+    allRecordsRef.current = allRecords;
+  }, [allRecords]);
+  const inFlightSubmissions = useRef<Set<string>>(new Set());
+
   const applyMatrix = useCallback((matrix: AttendanceMatrix) => {
     const { sessions: nextSessions, allRecords: nextRecords } = buildFromMatrix(matrix);
     setSessions(nextSessions);
@@ -148,27 +154,39 @@ export function useAttendance(_participants: Participant[] = [], initialSessionI
       const cleanDni = participantDni ? normalizeAttendanceCode(participantDni) : '';
       const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+      // Verificamos el estado actual antes de mutar
+      const currentSession = allRecordsRef.current[sessionId] || {};
+      const isCurrentlyPresent =
+        currentSession[cleanCode]?.status === 'present' ||
+        (cleanDni ? currentSession[cleanDni]?.status === 'present' : false);
+      const nextStatus = isCurrentlyPresent ? 'absent' : 'present';
+      const nextRecord: AttendanceRecord = { status: nextStatus, timestamp: now };
+
       manageAttendanceUseCase.toggle(sessionId, cleanCode);
 
       setAllRecords((prev) => {
-        const currentSession = { ...(prev[sessionId] || {}) };
-        const isCurrentlyPresent = currentSession[cleanCode]?.status === 'present';
-        const nextStatus = isCurrentlyPresent ? 'absent' : 'present';
-        const nextRecord: AttendanceRecord = { status: nextStatus, timestamp: now };
-
-        currentSession[cleanCode] = nextRecord;
-        if (cleanDni) currentSession[cleanDni] = nextRecord;
-
-        // Si se marca como presente y tenemos DNI, enviar al Google Form en segundo plano
-        if (nextStatus === 'present' && cleanDni) {
-          submitManualAttendanceToForm(sessionId, cleanDni, participantName);
-        }
-
+        const session = { ...(prev[sessionId] || {}) };
+        session[cleanCode] = nextRecord;
+        if (cleanDni) session[cleanDni] = nextRecord;
         return {
           ...prev,
-          [sessionId]: currentSession,
+          [sessionId]: session,
         };
       });
+
+      // El envío a Google Forms se ejecuta FUERA del updater funcional de React
+      // para garantizar que nunca se invoque 2 veces por React StrictMode ni por clics accidentales
+      if (nextStatus === 'present' && cleanDni) {
+        const flightKey = `${sessionId}_${cleanDni}`;
+        if (!inFlightSubmissions.current.has(flightKey)) {
+          inFlightSubmissions.current.add(flightKey);
+          submitManualAttendanceToForm(sessionId, cleanDni, participantName).finally(() => {
+            setTimeout(() => {
+              inFlightSubmissions.current.delete(flightKey);
+            }, 3000);
+          });
+        }
+      }
     },
     []
   );

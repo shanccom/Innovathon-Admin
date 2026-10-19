@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LocalStorageAttendanceRepository } from '../infrastructure/repositories/local-storage-attendance.repository';
 import { ManageAttendanceUseCase } from '../application/use-cases/manage-attendance.use-case';
 import { normalizeAttendanceCode } from '../application/hooks/useAttendance';
@@ -8,6 +8,7 @@ import {
   saveCustomFormUrl,
   getEffectiveFormUrl,
   getCustomFormUrls,
+  submitManualAttendanceToForm,
 } from '../infrastructure/config/attendance-forms.config';
 
 function createStorageMock() {
@@ -115,6 +116,25 @@ describe('Attendance Module - 6 Sessions & Contingency Workflow', () => {
 
       expect(totalMarks).toBe(5);
       expect(totalMarks >= MIN_ATTENDANCE_FOR_CERTIFICATE).toBe(true);
+    });
+
+    it('should deduplicate multiple rapid calls to submitManualAttendanceToForm', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('', { status: 200 }));
+
+      const sessionId = 'dia-1-manana';
+      const dni = '99998888';
+      const name = 'Test Participant';
+
+      // First call -> triggers fetch
+      const result1 = await submitManualAttendanceToForm(sessionId, dni, name);
+      // Second immediate call -> deduplicated, does not trigger fetch again
+      const result2 = await submitManualAttendanceToForm(sessionId, dni, name);
+
+      expect(result1).toBe(true);
+      expect(result2).toBe(true);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+      fetchSpy.mockRestore();
     });
   });
 });
