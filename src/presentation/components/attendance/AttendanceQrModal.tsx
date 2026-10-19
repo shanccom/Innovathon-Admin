@@ -28,14 +28,33 @@ export const AttendanceQrModal: React.FC<AttendanceQrModalProps> = ({
 
   // Busca los metadatos enriquecidos de la sesión (horario, descripción, formUrl)
   const sessionConfig = useMemo(() => {
-    return (
-      DEFAULT_ATTENDANCE_SESSIONS.find(
-        (s) =>
-          s.id === activeSessionId ||
-          s.name.toLowerCase() === activeSessionId.toLowerCase()
-      ) || DEFAULT_ATTENDANCE_SESSIONS[0]
+    // 1. Coincidencia directa por id o name
+    const direct = DEFAULT_ATTENDANCE_SESSIONS.find(
+      (s) =>
+        s.id === activeSessionId ||
+        s.name.toLowerCase() === activeSessionId.toLowerCase()
     );
-  }, [activeSessionId]);
+    if (direct) return direct;
+
+    // 2. Si activeSessionId es "Asistencia X", extrae el número de sesión (1..6)
+    const numMatch = activeSessionId.match(/(\d+)/);
+    if (numMatch) {
+      const idx = parseInt(numMatch[1], 10) - 1;
+      if (idx >= 0 && idx < DEFAULT_ATTENDANCE_SESSIONS.length) {
+        return DEFAULT_ATTENDANCE_SESSIONS[idx];
+      }
+    }
+
+    // 3. Si coincide con la posición en la lista de sesiones
+    const sessionIndex = sessions.findIndex(
+      (s) => s.id === activeSessionId || s.name === activeSessionId
+    );
+    if (sessionIndex >= 0 && sessionIndex < DEFAULT_ATTENDANCE_SESSIONS.length) {
+      return DEFAULT_ATTENDANCE_SESSIONS[sessionIndex];
+    }
+
+    return DEFAULT_ATTENDANCE_SESSIONS[0];
+  }, [activeSessionId, sessions]);
 
   const effectiveUrl = useMemo(() => {
     return getEffectiveFormUrl(sessionConfig);

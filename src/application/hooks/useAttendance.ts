@@ -6,6 +6,10 @@ import {
   appsScriptAttendanceClient,
   AttendanceMatrix,
 } from '../../infrastructure/api/apps-script-attendance.client';
+import {
+  DEFAULT_ATTENDANCE_SESSIONS,
+  submitManualAttendanceToForm,
+} from '../../infrastructure/config/attendance-forms.config';
 
 /** Encabezados de la matriz que NO son columnas de sesión. */
 const NON_SESSION_HEADERS = new Set(
@@ -42,7 +46,7 @@ function isMarked(value: unknown): boolean {
 
 /**
  * Convierte la matriz oficial (encabezados + filas) en sesiones y registros.
- * Índice por Código normalizado.
+ * Mapea las columnas ("Asistencia 1" .. "6") a las sesiones oficiales ("dia-1-manana", etc.)
  */
 function buildFromMatrix(matrix: AttendanceMatrix): {
   sessions: AttendanceSession[];
@@ -52,25 +56,35 @@ function buildFromMatrix(matrix: AttendanceMatrix): {
     (h) => h && !NON_SESSION_HEADERS.has(normalizeAttendanceCode(h))
   );
 
-  const sessions: AttendanceSession[] = sessionNames.map((name, i) => ({
-    id: name,
-    name,
-    createdAt: i,
-  }));
+  const sessions: AttendanceSession[] = sessionNames.map((name, i) => {
+    const config = DEFAULT_ATTENDANCE_SESSIONS[i];
+    return {
+      id: config ? config.id : name,
+      name: config ? config.name : name,
+      createdAt: i,
+    };
+  });
 
   const allRecords: AttendanceSessionMap = {};
-  sessionNames.forEach((name) => {
-    allRecords[name] = {};
+  sessions.forEach((s) => {
+    allRecords[s.id] = {};
   });
 
   matrix.data.forEach((row) => {
     const code = normalizeAttendanceCode(row['Código'] ?? row['codigo'] ?? row['Codigo'] ?? '');
     const dni = normalizeAttendanceCode(row['DNI'] ?? row['dni'] ?? row['Documento'] ?? '');
-    sessionNames.forEach((name) => {
+    sessionNames.forEach((name, i) => {
+      const targetId = sessions[i]?.id || name;
       if (isMarked(row[name])) {
         const rec: AttendanceRecord = { status: 'present', timestamp: '' };
-        if (code) allRecords[name][code] = rec;
-        if (dni) allRecords[name][dni] = rec;
+        if (code) {
+          if (!allRecords[targetId]) allRecords[targetId] = {};
+          allRecords[targetId][code] = rec;
+        }
+        if (dni) {
+          if (!allRecords[targetId]) allRecords[targetId] = {};
+          allRecords[targetId][dni] = rec;
+        }
       }
     });
   });
@@ -129,7 +143,7 @@ export function useAttendance(_participants: Participant[] = [], initialSessionI
   }, [applyMatrix]);
 
   const markManualAttendance = useCallback(
-    (sessionId: string, participantCode: string, participantDni?: string) => {
+    (sessionId: string, participantCode: string, participantDni?: string, participantName?: string) => {
       const cleanCode = normalizeAttendanceCode(participantCode);
       const cleanDni = participantDni ? normalizeAttendanceCode(participantDni) : '';
       const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -144,6 +158,11 @@ export function useAttendance(_participants: Participant[] = [], initialSessionI
 
         currentSession[cleanCode] = nextRecord;
         if (cleanDni) currentSession[cleanDni] = nextRecord;
+
+        // Si se marca como presente y tenemos DNI, enviar al Google Form en segundo plano
+        if (nextStatus === 'present' && cleanDni) {
+          submitManualAttendanceToForm(sessionId, cleanDni, participantName);
+        }
 
         return {
           ...prev,

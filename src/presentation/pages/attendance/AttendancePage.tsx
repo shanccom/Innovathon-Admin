@@ -533,7 +533,7 @@ export const AttendancePage: React.FC = () => {
                         <td style={{ textAlign: 'center' }}>
                           <button
                             type="button"
-                            onClick={() => markManualAttendance(activeSessionId, p.codigo, p.dni)}
+                            onClick={() => markManualAttendance(activeSessionId, p.codigo, p.dni, p.nombre)}
                             className={`btn btn-sm ${isPresent ? 'btn-secondary' : 'btn-primary'}`}
                             style={{
                               fontSize: '0.72rem',

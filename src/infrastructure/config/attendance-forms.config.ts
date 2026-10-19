@@ -15,6 +15,8 @@ export interface AttendanceSessionConfig {
   schedule: string;
   description: string;
   defaultFormUrl: string;
+  dniEntryId: string;
+  nameEntryId: string;
 }
 
 /** Umbral de asistencias para tener derecho a certificado de participación (5 de 6) */
@@ -30,6 +32,8 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     schedule: '08:30 AM – 10:00 AM',
     description: 'Acreditación oficial, entrega de pases e inauguración',
     defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSeGSB-L3fBFwLvKJtEH4lt20IM94GcMoACZz2I3kEoPS-VQTA/viewform',
+    dniEntryId: 'entry.1909762828',
+    nameEntryId: 'entry.96983164',
   },
   {
     id: 'dia-1-tarde',
@@ -39,6 +43,8 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     schedule: '02:30 PM – 04:00 PM',
     description: 'Conformación de equipos y primera ronda de mentorías',
     defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScT-dRhuehJi0uuFSpkGqnSpXqzEGYUaSZq8UCZFzVzl2wkIw/viewform',
+    dniEntryId: 'entry.455968617',
+    nameEntryId: 'entry.766445960',
   },
   {
     id: 'dia-2-manana',
@@ -48,6 +54,8 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     schedule: '08:30 AM – 10:00 AM',
     description: 'Check-in de desarrollo, programación y hacking matutino',
     defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSeaMJ6H9awI0r9Kfl9RQ2IeuzssscG2fW30_sjA4fS8yK-WkQ/viewform',
+    dniEntryId: 'entry.1713737393',
+    nameEntryId: 'entry.36579966',
   },
   {
     id: 'dia-2-tarde',
@@ -57,6 +65,8 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     schedule: '02:30 PM – 04:00 PM',
     description: 'Checkpoint de prototipos y segunda ronda de mentorías',
     defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSeiv1TztQAXjO8xnpn3dTn7EsbsIma2J8FQomryDzDm9uevIQ/viewform',
+    dniEntryId: 'entry.1766463063',
+    nameEntryId: 'entry.2016871128',
   },
   {
     id: 'dia-3-manana',
@@ -66,6 +76,8 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     schedule: '08:30 AM – 10:00 AM',
     description: 'Ensayo general de pitch, validación técnica y demos',
     defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScvI7yXkWpWO0wnQkw1mbykAmWvRDCJ5LZOZF8XzCBtyFjX5g/viewform',
+    dniEntryId: 'entry.1812068158',
+    nameEntryId: 'entry.809060977',
   },
   {
     id: 'dia-3-tarde',
@@ -75,6 +87,8 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     schedule: '02:00 PM – 03:30 PM',
     description: 'Presentación final ante el jurado calificador y clausura',
     defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSdELgCDKRMmGDcH94DujL5-Abd6Mrz13ENTxtGEku6itZysbg/viewform',
+    dniEntryId: 'entry.577968248',
+    nameEntryId: 'entry.49785039',
   },
 ];
 
@@ -108,3 +122,51 @@ export function getEffectiveFormUrl(session: AttendanceSessionConfig): string {
   const customUrls = getCustomFormUrls();
   return customUrls[session.id] || customUrls[session.name] || session.defaultFormUrl;
 }
+
+/**
+ * Envía la asistencia en segundo plano directamente al Google Form oficial
+ * correspondiente a la sesión seleccionada (usando mode: 'no-cors' para evitar bloqueos del navegador).
+ * De esta manera, el check-in manual impacta tanto en la Web como en Google Sheets.
+ */
+export async function submitManualAttendanceToForm(
+  sessionId: string,
+  dni: string,
+  name?: string
+): Promise<boolean> {
+  if (!dni) return false;
+  const config =
+    DEFAULT_ATTENDANCE_SESSIONS.find(
+      (s) =>
+        s.id === sessionId ||
+        s.name.toLowerCase() === sessionId.toLowerCase()
+    ) ||
+    DEFAULT_ATTENDANCE_SESSIONS[
+      parseInt(sessionId.replace(/\D/g, '') || '1', 10) - 1
+    ] ||
+    DEFAULT_ATTENDANCE_SESSIONS[0];
+
+  if (!config || !config.defaultFormUrl) return false;
+
+  try {
+    const responseUrl = config.defaultFormUrl.replace('/viewform', '/formResponse');
+    const params = new URLSearchParams();
+    params.append(config.dniEntryId, dni.trim());
+    if (name && config.nameEntryId) {
+      params.append(config.nameEntryId, `${name.trim()} (Manual Admin)`);
+    }
+
+    await fetch(responseUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+    return true;
+  } catch (err) {
+    console.warn('No se pudo enviar asistencia al Google Form en segundo plano:', err);
+    return false;
+  }
+}
+
