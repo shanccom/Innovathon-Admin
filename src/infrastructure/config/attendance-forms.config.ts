@@ -29,7 +29,7 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     shift: 'mañana',
     schedule: '08:30 AM – 10:00 AM',
     description: 'Acreditación oficial, entrega de pases e inauguración',
-    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScD1M-sample/viewform',
+    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSeGSB-L3fBFwLvKJtEH4lt20IM94GcMoACZz2I3kEoPS-VQTA/viewform',
   },
   {
     id: 'dia-1-tarde',
@@ -38,7 +38,7 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     shift: 'tarde',
     schedule: '02:30 PM – 04:00 PM',
     description: 'Conformación de equipos y primera ronda de mentorías',
-    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScD1T-sample/viewform',
+    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScT-dRhuehJi0uuFSpkGqnSpXqzEGYUaSZq8UCZFzVzl2wkIw/viewform',
   },
   {
     id: 'dia-2-manana',
@@ -47,7 +47,7 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     shift: 'mañana',
     schedule: '08:30 AM – 10:00 AM',
     description: 'Check-in de desarrollo, programación y hacking matutino',
-    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScD2M-sample/viewform',
+    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSeaMJ6H9awI0r9Kfl9RQ2IeuzssscG2fW30_sjA4fS8yK-WkQ/viewform',
   },
   {
     id: 'dia-2-tarde',
@@ -56,7 +56,7 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     shift: 'tarde',
     schedule: '02:30 PM – 04:00 PM',
     description: 'Checkpoint de prototipos y segunda ronda de mentorías',
-    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScD2T-sample/viewform',
+    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSeiv1TztQAXjO8xnpn3dTn7EsbsIma2J8FQomryDzDm9uevIQ/viewform',
   },
   {
     id: 'dia-3-manana',
@@ -65,7 +65,7 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     shift: 'mañana',
     schedule: '08:30 AM – 10:00 AM',
     description: 'Ensayo general de pitch, validación técnica y demos',
-    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScD3M-sample/viewform',
+    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScvI7yXkWpWO0wnQkw1mbykAmWvRDCJ5LZOZF8XzCBtyFjX5g/viewform',
   },
   {
     id: 'dia-3-tarde',
@@ -74,7 +74,7 @@ export const DEFAULT_ATTENDANCE_SESSIONS: AttendanceSessionConfig[] = [
     shift: 'tarde',
     schedule: '02:00 PM – 03:30 PM',
     description: 'Presentación final ante el jurado calificador y clausura',
-    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScD3T-sample/viewform',
+    defaultFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSdELgCDKRMmGDcH94DujL5-Abd6Mrz13ENTxtGEku6itZysbg/viewform',
   },
 ];
 
