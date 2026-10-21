@@ -137,6 +137,7 @@ export class GoogleSheetsParticipantRepository implements ParticipantRepository 
         const res = await fetch(urlWithAction, {
           method: 'GET',
           mode: 'cors',
+          credentials: 'omit',
         });
         if (res.ok) {
           const json = await res.json();

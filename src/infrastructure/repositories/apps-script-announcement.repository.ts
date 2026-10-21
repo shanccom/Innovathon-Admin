@@ -62,6 +62,7 @@ export class AppsScriptAnnouncementRepository implements AnnouncementRepository 
 
       const res = await fetch(appsScriptUrl, {
         method: 'POST',
+        credentials: 'omit',
         headers: {
           'Content-Type': 'text/plain;charset=utf-8',
         },
@@ -165,6 +166,7 @@ export class AppsScriptAnnouncementRepository implements AnnouncementRepository 
 
       const res = await fetch(appsScriptUrl, {
         method: 'POST',
+        credentials: 'omit',
         headers: {
           'Content-Type': 'text/plain;charset=utf-8',
         },

@@ -19,7 +19,7 @@ export const APPS_SCRIPT_ENDPOINTS = {
   /**
    * Endpoint futuro para Certificados (generación de PDFs en Google Drive, plantillas y firmas)
    */
-  certificates: '',
+  certificates: 'https://script.google.com/macros/s/AKfycbwUGwkLjrelCVMIIyE3EHRHbRLF3V5hYusYY6dAWnAp0W2Gp3JmlhJ9tglOFkua6dir/exec',
 
   /**
    * Endpoint para Comunicados masivos (Gmail API / Apps Script MailApp)
@@ -38,4 +38,6 @@ export const GOOGLE_SHEETS_CONFIG = {
    * Se lee en modo solo lectura (checkboxes por sesión) para mostrarla en el panel.
    */
   attendanceSheetName: 'Matriz Asistencia',
+  organizersSpreadsheetId: '1tr7NlaUsvnhdeEFYgw3rEHhsetUHY83qcqdcx11ezqA',
+  participantsSpreadsheetId: '1U48ftJJns3-4waJrt4A4uaI4OBNQoeyg1sOzzvXllI8',
 } as const;
