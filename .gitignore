@@ -22,3 +22,9 @@ node_modules
 *.njsproj
 *.sln
 *.sw?
+
+.atl/
+.impeccable/
+docs/
+apps-script/
+odd/
