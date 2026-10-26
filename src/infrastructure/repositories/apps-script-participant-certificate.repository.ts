@@ -96,7 +96,7 @@ export class AppsScriptParticipantCertificateRepository implements ParticipantCe
       identifier: item.identifier,
       dni: item.dni ? item.dni.trim() : undefined,
       fullName: toTitleCase(item.fullName),
-      role: toTitleCase(item.role || 'Participante'),
+      role: item.role,
       team: item.team || 'Sin equipo',
       email: item.email || '',
       sendCertificate: Boolean(item.sendCertificate),
@@ -152,7 +152,7 @@ export class AppsScriptParticipantCertificateRepository implements ParticipantCe
       fullName: it.fullName,
       role: it.role,
       area: it.area || it.team,
-      hours: it.hours,
+      templateType: 'participant',
     }));
     const url = `${this.endpoint}${separator}action=generateCertificates&population=participants&items=${encodeURIComponent(JSON.stringify(compactItems))}`;
     const payload = (await fetchViaJsonp(url, 90_000)) as GenerateCertificatesResponse;

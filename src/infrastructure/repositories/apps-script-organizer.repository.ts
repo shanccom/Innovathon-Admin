@@ -88,11 +88,12 @@ export class AppsScriptOrganizerRepository implements OrganizerRepository {
     if (payload.success !== true || !Array.isArray((payload as OrganizerResponse).organizers)) {
       throw new Error(payload.error || 'Apps Script no pudo leer los organizadores.');
     }
-    return (payload as OrganizerResponse).organizers!.map(({ identifier, dni, fullName, role, area, sendCertificate, generationStatus, drivePdfUrl }) => ({
+    return (payload as OrganizerResponse).organizers!.map(({ identifier, dni, fullName, role, templateType, area, sendCertificate, generationStatus, drivePdfUrl }) => ({
       identifier,
       dni: dni ? dni.trim() : undefined,
       fullName: toTitleCase(fullName),
-      role: toTitleCase(role),
+      role,
+      templateType: templateType === 'organizer' || templateType === 'volunteer' ? templateType : undefined,
       area: toTitleCase(area),
       sendCertificate,
       generationStatus: generationStatus ? generationStatus.trim() : undefined,
@@ -109,6 +110,13 @@ export class AppsScriptOrganizerRepository implements OrganizerRepository {
     if (payload.success !== true) {
       throw new Error(payload.error || 'No se pudo actualizar el campo.');
     }
+  }
+
+  async updateTemplateType(identifier: string, value: 'organizer' | 'volunteer'): Promise<void> {
+    if (!this.endpoint) throw new Error('No hay una URL de Google Apps Script configurada para leer organizadores.');
+    const separator = this.endpoint.includes('?') ? '&' : '?';
+    const payload = await fetchViaJsonp(`${this.endpoint}${separator}action=updateTemplateType&identifier=${encodeURIComponent(identifier)}&value=${value}`) as UpdateResponse;
+    if (payload.success !== true) throw new Error(payload.error || 'No se pudo guardar el tipo de emisión.');
   }
 
   async updateBulkSendCertificate(identifiers: string[], value: boolean): Promise<number> {
@@ -144,7 +152,7 @@ export class AppsScriptOrganizerRepository implements OrganizerRepository {
       fullName: it.fullName,
       role: it.role,
       area: it.area,
-      hours: it.hours,
+      templateType: it.templateType,
     }));
     const url = `${this.endpoint}${separator}action=generateCertificates&population=organizers&items=${encodeURIComponent(JSON.stringify(compactItems))}`;
     const payload = (await fetchViaJsonp(url, 90_000)) as GenerateCertificatesResponse;
