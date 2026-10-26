@@ -21,10 +21,7 @@ interface CertificateFiltersProps {
   areaFilterLabel?: string;
   driveFolderId?: string;
   spreadsheetId?: string;
-  onSelectAllFiltered?: () => void;
-  onDeselectAll?: () => void;
   isBulkUpdating?: boolean;
-  filteredCount?: number;
   onRefresh?: () => void;
   isLoading?: boolean;
 }
@@ -49,10 +46,7 @@ export const CertificateFilters: React.FC<CertificateFiltersProps> = ({
   areaFilterLabel = 'Área',
   driveFolderId,
   spreadsheetId,
-  onSelectAllFiltered,
-  onDeselectAll,
   isBulkUpdating = false,
-  filteredCount,
   onRefresh,
   isLoading = false,
 }) => {
@@ -120,40 +114,6 @@ export const CertificateFilters: React.FC<CertificateFiltersProps> = ({
           </button>
         </div>
       </div>
-
-      {(onSelectAllFiltered || onDeselectAll) && (
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', paddingTop: '4px' }}>
-          {onSelectAllFiltered && (
-            <button
-              type="button"
-              className="btn-link-action"
-              onClick={onSelectAllFiltered}
-              disabled={isBulkUpdating}
-              title="Selecciona para emisión todos los registros que coinciden con los filtros actuales y actualiza Google Sheets"
-            >
-              <Icon name={isBulkUpdating ? 'refresh' : 'check'} size={14} className={isBulkUpdating ? 'spin' : ''} />
-              <span>Seleccionar todos (filtrados{typeof filteredCount === 'number' ? `: ${filteredCount}` : ''})</span>
-            </button>
-          )}
-          {onDeselectAll && (
-            <button
-              type="button"
-              className="btn-link-action"
-              onClick={onDeselectAll}
-              disabled={isBulkUpdating}
-              title="Desmarca la emisión de los registros pendientes (sin tocar los ya Generados) y actualiza Google Sheets"
-            >
-              <Icon name={isBulkUpdating ? 'refresh' : 'x'} size={14} className={isBulkUpdating ? 'spin' : ''} />
-              <span>Desmarcar todos</span>
-            </button>
-          )}
-          {isBulkUpdating && (
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <span className="spinner-border spinner-border-sm" /> Guardando en Google Sheet…
-            </span>
-          )}
-        </div>
-      )}
 
       {showFilters && (
         <div className="filter-select-row">

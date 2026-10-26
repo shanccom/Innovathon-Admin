@@ -1,10 +1,6 @@
 import React from 'react';
 import { Icon } from '../../../components/common/Icon';
-
-export interface OrganizerHoursConfig {
-  includeHours: boolean;
-  hours: number;
-}
+import { OrgEmissionType, ORG_EMISSION_LABELS } from '../../../../domain/models/certificate-type.model';
 
 export interface CertificatePersonItem {
   identifier: string;
@@ -20,11 +16,7 @@ export interface CertificatePersonItem {
 
 interface CertificateTableProps {
   organizers: CertificatePersonItem[];
-  hoursMap: Record<string, OrganizerHoursConfig>;
   onToggleSendCertificate: (identifier: string, currentValue: boolean) => void;
-  onToggleIncludeHours: (identifier: string, currentValue: boolean) => void;
-  onChangeHours: (identifier: string, hours: number) => void;
-  onApplyBulkHours: () => void;
   onRegenerateCertificate?: (identifier: string) => void;
   regeneratingIds?: Set<string>;
   toggleErrors: Record<string, string>;
@@ -33,15 +25,20 @@ interface CertificateTableProps {
   populationLabel?: string;
   population?: 'organizadores' | 'participantes';
   isLocked?: boolean;
+  emissionTypeMap?: Record<string, OrgEmissionType>;
+  onEmissionTypeChange?: (identifier: string, type: OrgEmissionType) => void;
+  savingTemplateIds?: Set<string>;
+  templateErrors?: Record<string, string>;
+  onSelectAllVisible?: () => void;
+  onDeselectAllVisible?: () => void;
+  selectableCount?: number;
+  deselectableCount?: number;
+  bulkActionPending?: boolean;
 }
 
 export const CertificateTable: React.FC<CertificateTableProps> = ({
   organizers,
-  hoursMap,
   onToggleSendCertificate,
-  onToggleIncludeHours,
-  onChangeHours,
-  onApplyBulkHours,
   onRegenerateCertificate,
   regeneratingIds = new Set(),
   toggleErrors,
@@ -50,8 +47,18 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
   populationLabel = 'Organizadores',
   population = 'organizadores',
   isLocked = false,
+  emissionTypeMap,
+  onEmissionTypeChange,
+  savingTemplateIds = new Set(),
+  templateErrors = {},
+  onSelectAllVisible,
+  onDeselectAllVisible,
+  selectableCount = 0,
+  deselectableCount = 0,
+  bulkActionPending = false,
 }) => {
   const isParticipants = population === 'participantes';
+  const columnCount = isParticipants || !onEmissionTypeChange ? 6 : 7;
 
   const [confirmTarget, setConfirmTarget] = React.useState<CertificatePersonItem | null>(null);
 
@@ -148,24 +155,40 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
   };
 
   return (
-    <div className="table-container">
+    <div className="table-container certificate-table-container">
       <div className="table-bulk-toolbar">
         <span className="table-bulk-info">
           {populationLabel} seleccionados para emisión: <strong>{activeCount} de {totalCount}</strong>
         </span>
-        <button
-          type="button"
-          className="btn-link-action"
-          onClick={onApplyBulkHours}
-          disabled={activeCount === 0 || isLocked}
-          title={`Configura 120 horas lectivas a todos los ${populationLabel.toLowerCase()} que tienen la emisión activa`}
-        >
-          <Icon name="clock" size={14} />
-          <span>Aplicar 120 hrs a seleccionados</span>
-        </button>
+        <div className="table-bulk-actions" aria-label={`Acciones masivas para ${populationLabel}`}>
+          {onSelectAllVisible && (
+            <button
+              type="button"
+              className="btn-link-action"
+              onClick={onSelectAllVisible}
+              disabled={isLocked || selectableCount === 0}
+              title={`Seleccionar ${selectableCount} filas visibles de esta tabla y guardar en Google Sheets`}
+            >
+              <Icon name={bulkActionPending ? 'refresh' : 'check'} size={14} className={bulkActionPending ? 'spin' : ''} />
+              <span>{bulkActionPending ? 'Guardando…' : `Seleccionar filtrados (${selectableCount})`}</span>
+            </button>
+          )}
+          {onDeselectAllVisible && (
+            <button
+              type="button"
+              className="btn-link-action"
+              onClick={onDeselectAllVisible}
+              disabled={isLocked || deselectableCount === 0}
+              title={`Desmarcar ${deselectableCount} filas visibles pendientes de esta tabla; los certificados generados quedan protegidos`}
+            >
+              <Icon name={bulkActionPending ? 'refresh' : 'x'} size={14} className={bulkActionPending ? 'spin' : ''} />
+              <span>Desmarcar filtrados ({deselectableCount})</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      <table className="table-mock">
+      <table className="table-mock certificate-table">
         <thead>
           <tr>
             <th style={{ width: '170px' }}>{isParticipants ? 'Código' : 'Identificador'}</th>
@@ -182,17 +205,22 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
               </>
             )}
             <th style={{ width: '130px', textAlign: 'center' }}>Emitir cert.</th>
-            <th style={{ width: '190px' }}>Horas lectivas</th>
+            {onEmissionTypeChange && <th>TIPO DE EMISIÓN</th>}
             <th style={{ width: '130px' }}>Estado Drive</th>
           </tr>
         </thead>
         <tbody>
+          {organizers.length === 0 && (
+            <tr>
+              <td colSpan={columnCount} className="certificate-table-empty">
+                No hay personas que coincidan con los filtros actuales.
+              </td>
+            </tr>
+          )}
           {organizers.map((organizer) => {
-            const hoursConfig = hoursMap[organizer.identifier] || {
-              includeHours: false,
-              hours: 120,
-            };
             const isGenerated = organizer.generationStatus?.trim().toLowerCase() === 'generado' || organizer.generationStatus?.trim().toLowerCase() === 'emitido';
+            const templateType = emissionTypeMap?.[organizer.identifier];
+            const templateClassName = templateType ? ` emission-type-${templateType}` : '';
 
             return (
               <tr key={organizer.identifier} className={organizer.sendCertificate ? 'row-selected' : ''}>
@@ -205,14 +233,7 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
                 <td style={{ fontWeight: 600 }}>{organizer.fullName}</td>
                 {isParticipants ? (
                   <>
-                    <td>
-                      <span
-                        className="badge badge-subtle cell-clamp"
-                        title={organizer.role || undefined}
-                      >
-                        {organizer.role || 'Sin rol'}
-                      </span>
-                    </td>
+                    <td>{organizer.role}</td>
                     <td>
                       <span className="cell-clamp" title={organizer.team || undefined}>
                         {organizer.team || '—'}
@@ -221,9 +242,7 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
                   </>
                 ) : (
                   <>
-                    <td>
-                      <span className="badge badge-subtle">{organizer.role || 'Sin rol'}</span>
-                    </td>
+                    <td>{organizer.role}</td>
                     <td>{organizer.area || organizer.team || '—'}</td>
                   </>
                 )}
@@ -241,7 +260,8 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
                     >
                       <input
                         type="checkbox"
-                        checked={organizer.sendCertificate}
+                          checked={organizer.sendCertificate}
+                          aria-label={`Emitir certificado de ${organizer.fullName}`}
                         disabled={isGenerated || isLocked}
                         onChange={() =>
                           onToggleSendCertificate(
@@ -264,54 +284,31 @@ export const CertificateTable: React.FC<CertificateTableProps> = ({
                     )}
                   </div>
                 </td>
-                <td>
-                  {organizer.sendCertificate ? (
-                    <div className="hours-cell-control">
-                      <label className="toggle-switch toggle-switch-sm" title="Activar/desactivar inclusión de horas en el certificado">
-                        <input
-                          type="checkbox"
-                          checked={hoursConfig.includeHours}
-                          disabled={isLocked}
-                          onChange={(e) =>
-                            onToggleIncludeHours(
-                              organizer.identifier,
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="toggle-track" />
-                      </label>
-
-                      {hoursConfig.includeHours ? (
-                        <div className="hours-input-wrapper">
-                          <input
-                            type="number"
-                            min={1}
-                            max={1000}
-                            step={10}
-                            disabled={isLocked}
-                            className="hours-number-input"
-                            value={hoursConfig.hours || ''}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value, 10);
-                              onChangeHours(
-                                organizer.identifier,
-                                isNaN(val) ? 0 : val
-                              );
-                            }}
-                          />
-                          <span className="hours-unit">hrs</span>
-                        </div>
-                      ) : (
-                        <span className="hours-no-badge">Sin horas</span>
-                      )}
+                {onEmissionTypeChange && (
+                  <td>
+                    <div className="certificate-template-cell" aria-busy={savingTemplateIds.has(organizer.identifier)}>
+                      <select
+                        className={`emission-type-select${templateClassName}`}
+                        aria-label={`Tipo de emisión de ${organizer.fullName}`}
+                        aria-invalid={Boolean(templateErrors[organizer.identifier])}
+                        aria-describedby={`template-feedback-${organizer.identifier}`}
+                        value={emissionTypeMap?.[organizer.identifier] || ''}
+                        disabled={isLocked || savingTemplateIds.has(organizer.identifier)}
+                        onChange={(e) => onEmissionTypeChange(organizer.identifier, e.target.value as OrgEmissionType)}
+                      >
+                        <option value="" disabled>Seleccionar tipo</option>
+                        {(Object.entries(ORG_EMISSION_LABELS) as [OrgEmissionType, string][]).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                      <div id={`template-feedback-${organizer.identifier}`} className="certificate-template-feedback" aria-live="polite">
+                        {savingTemplateIds.has(organizer.identifier) && <span>Guardando…</span>}
+                        {templateErrors[organizer.identifier] && <span className="toggle-error" role="alert">{templateErrors[organizer.identifier]}</span>}
+                        {isGenerated && <span>El PDF actual no cambia. Regenera para aplicar el tipo.</span>}
+                      </div>
                     </div>
-                  ) : (
-                    <span className="hours-cell-muted" title="Activa 'Emitir cert.' para configurar horas">
-                      —
-                    </span>
-                  )}
-                </td>
+                  </td>
+                )}
                 <td>
                   {renderGenerationBadge(organizer)}
                 </td>

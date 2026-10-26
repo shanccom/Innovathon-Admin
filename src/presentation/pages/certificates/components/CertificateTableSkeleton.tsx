@@ -36,7 +36,7 @@ export const CertificateTableSkeleton: React.FC<CertificateTableSkeletonProps> =
               </>
             )}
             <th style={{ width: '130px', textAlign: 'center' }}>Emitir cert.</th>
-            <th style={{ width: '190px' }}>Horas lectivas</th>
+            {!isParticipants && <th style={{ width: '190px' }}>TIPO DE EMISIÓN</th>}
             <th style={{ width: '130px' }}>Estado Drive</th>
           </tr>
         </thead>
@@ -60,9 +60,9 @@ export const CertificateTableSkeleton: React.FC<CertificateTableSkeletonProps> =
                   <div className="skeleton-line shimmer" style={{ width: '38px', height: '20px', borderRadius: '10px' }} />
                 </div>
               </td>
-              <td>
+              {!isParticipants && <td>
                 <div className="skeleton-line shimmer" style={{ width: '110px', height: '22px', borderRadius: '6px' }} />
-              </td>
+              </td>}
               <td>
                 <div className="skeleton-line shimmer" style={{ width: '85px', height: '20px', borderRadius: '12px' }} />
               </td>

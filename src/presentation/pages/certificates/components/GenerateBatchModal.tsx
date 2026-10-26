@@ -1,6 +1,5 @@
 import React from 'react';
 import { Icon } from '../../../components/common/Icon';
-import { OrganizerHoursConfig } from './CertificateTable';
 import { getDriveConfig } from './DriveConfigModal';
 
 interface BatchParticipantItem {
@@ -17,7 +16,6 @@ interface GenerateBatchModalProps {
   isOpen: boolean;
   onClose: () => void;
   organizers: BatchParticipantItem[];
-  hoursMap: Record<string, OrganizerHoursConfig>;
   onConfirm: () => void;
   isProcessing?: boolean;
   populationLabel?: string;
@@ -27,7 +25,6 @@ export const GenerateBatchModal: React.FC<GenerateBatchModalProps> = ({
   isOpen,
   onClose,
   organizers,
-  hoursMap,
   onConfirm,
   isProcessing = false,
   populationLabel = 'organizadores',
@@ -36,12 +33,8 @@ export const GenerateBatchModal: React.FC<GenerateBatchModalProps> = ({
 
   const driveConfig = getDriveConfig();
   const activeOrganizers = organizers.filter(
-    (o) => o.sendCertificate && o.generationStatus?.trim().toLowerCase() !== 'generado'
+    (o) => o.sendCertificate && !['generado', 'emitido'].includes(o.generationStatus?.trim().toLowerCase() || '')
   );
-  const withHoursCount = activeOrganizers.filter(
-    (o) => (hoursMap[o.identifier]?.includeHours ?? false) && (hoursMap[o.identifier]?.hours ?? 120) > 0
-  ).length;
-  const withoutHoursCount = activeOrganizers.length - withHoursCount;
 
   return (
     <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="batch-modal-title">
@@ -100,14 +93,6 @@ export const GenerateBatchModal: React.FC<GenerateBatchModalProps> = ({
               <span className="batch-stat-number">{activeOrganizers.length}</span>
               <span className="batch-stat-label">Certificados a emitir</span>
             </div>
-            <div className="batch-stat-card">
-              <span className="batch-stat-number">{withHoursCount}</span>
-              <span className="batch-stat-label">Con horas acreditadas</span>
-            </div>
-            <div className="batch-stat-card">
-              <span className="batch-stat-number">{withoutHoursCount}</span>
-              <span className="batch-stat-label">Sin mención de horas</span>
-            </div>
           </div>
 
           <div className="batch-preview-list-header">
@@ -116,7 +101,6 @@ export const GenerateBatchModal: React.FC<GenerateBatchModalProps> = ({
 
           <div className="batch-preview-list">
             {activeOrganizers.map((org) => {
-              const cfg = hoursMap[org.identifier] || { includeHours: true, hours: 120 };
               return (
                 <div key={org.identifier} className="batch-preview-item">
                   <div className="batch-item-info">
@@ -124,13 +108,6 @@ export const GenerateBatchModal: React.FC<GenerateBatchModalProps> = ({
                     <span className="batch-item-meta">
                       {org.identifier} • {org.role || 'Participante'} • {org.area || org.team || 'General'}
                     </span>
-                  </div>
-                  <div className="batch-item-hours">
-                    {cfg.includeHours && cfg.hours > 0 ? (
-                      <span className="badge badge-accent">{cfg.hours} hrs</span>
-                    ) : (
-                      <span className="badge badge-subtle">Sin horas</span>
-                    )}
                   </div>
                 </div>
               );
