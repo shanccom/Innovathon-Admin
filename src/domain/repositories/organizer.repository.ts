@@ -6,7 +6,7 @@ export interface CertificateGenerationItem {
   role?: string;
   area?: string;
   team?: string;
-  hours?: number;
+  templateType?: 'organizer' | 'volunteer' | 'area_director' | 'participant';
 }
 
 export interface GenerationResult {
@@ -25,6 +25,7 @@ export interface GenerateCertificatesResponse {
 
 export interface OrganizerRepository {
   getOrganizers(): Promise<Organizer[]>;
+  updateTemplateType(identifier: string, value: 'organizer' | 'volunteer'): Promise<void>;
   updateSendCertificate(identifier: string, value: boolean): Promise<void>;
   updateBulkSendCertificate(identifiers: string[], value: boolean): Promise<number>;
   regenerateCertificate(identifier: string): Promise<void>;

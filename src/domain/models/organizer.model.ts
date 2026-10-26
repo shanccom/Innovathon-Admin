@@ -3,9 +3,9 @@ export interface Organizer {
   dni?: string;
   fullName: string;
   role: string;
+  templateType?: 'organizer' | 'volunteer' | '';
   area: string;
   sendCertificate: boolean;
   generationStatus?: string;
   drivePdfUrl?: string;
 }
-
