@@ -458,9 +458,9 @@ describe('certificate Apps Script response', () => {
   });
 
   it('executes generateCertificates action mocking DriveApp and SlidesApp', () => {
-    const headers = ['IDENTIFICADOR', 'NOMBRES COMPLETOS', 'APELLIDOS COMPLETOS', 'ROL QUE DESEMPEÑAS', 'AREA DE INTERES', 'ENVIAR CERTIFICADO', 'ESTADO GENERACION', 'URL DRIVE PDF'];
+    const headers = ['IDENTIFICADOR', 'NOMBRES COMPLETOS', 'APELLIDOS COMPLETOS', 'ROL QUE DESEMPEÑAS', 'AREA DE INTERES', 'ENVIAR CERTIFICADO', 'ESTADO GENERACION', 'URL DRIVE PDF', 'TIPO DE PLANTILLA'];
     const rows = [
-      ['ORG-001', 'Ana', 'García', 'Directora', 'Tech', true, '', ''],
+      ['ORG-001', 'Ana', 'García', 'Directora', 'Tech', true, '', '', 'Organizador'],
     ];
     const setValueSpy = vi.fn();
     const setValuesSpy = vi.fn();
@@ -486,7 +486,10 @@ describe('certificate Apps Script response', () => {
     };
 
     const replaceAllTextSpy = vi.fn();
-    const slideMock = { replaceAllText: replaceAllTextSpy };
+    const slideMock = {
+      replaceAllText: replaceAllTextSpy,
+      getNotesPage: () => ({ getSpeakerNotesShape: () => ({ getText: () => ({ asString: () => 'TIPO DE PLANTILLA: Organizador' }) }) }),
+    };
     const slideDocMock = {
       getSlides: () => [slideMock],
       saveAndClose: vi.fn(),
@@ -502,7 +505,16 @@ describe('certificate Apps Script response', () => {
     const personFolderMock = {
       createFile: vi.fn(() => createdPdfMock),
     };
-    const createFolderSpy = vi.fn(() => personFolderMock);
+    const groupFolderMock = {
+      createFolder: vi.fn(() => personFolderMock),
+      getFoldersByName: vi.fn(() => ({ hasNext: () => false })),
+    };
+    const createFolderSpy = vi.fn((name: string) => {
+      if (name === 'Voluntarios y Organizadores' || name === 'Directores de Área') {
+        return groupFolderMock;
+      }
+      return personFolderMock;
+    });
     const getFoldersByNameSpy = vi.fn(() => ({ hasNext: () => false }));
     const targetFolderMock = {
       createFile: () => createdPdfMock,
@@ -541,7 +553,7 @@ describe('certificate Apps Script response', () => {
         callback: 'cb',
         action: 'generateCertificates',
         population: 'organizers',
-        items: JSON.stringify([{ identifier: 'ORG-001', fullName: 'Ana García', hours: 120 }]),
+        items: JSON.stringify([{ identifier: 'ORG-001', fullName: 'Ana García', hours: 120, templateType: 'organizer' }]),
       },
     };
 
@@ -562,18 +574,19 @@ describe('certificate Apps Script response', () => {
     expect(parsed.generatedCount).toBe(1);
     expect(parsed.results[0].status).toBe('Generado');
     expect(parsed.results[0].pdfUrl).toBe('https://drive.google.com/pdf/test-certificate.pdf');
-    expect(createFolderSpy).toHaveBeenCalledWith('Ana García');
+    expect(createFolderSpy).toHaveBeenCalledWith('Voluntarios y Organizadores');
+    expect(groupFolderMock.createFolder).toHaveBeenCalledWith('Ana García');
     expect(personFolderMock.createFile).toHaveBeenCalled();
     expect(replaceAllTextSpy).toHaveBeenCalledWith('{{NOMBRE}}', 'Ana García');
     expect(replaceAllTextSpy).toHaveBeenCalledWith('{{NOMBRE_COMPLETO}}', 'Ana García');
-    expect(replaceAllTextSpy).toHaveBeenCalledWith('{{HORAS}}', '120 horas académicas');
+    expect(replaceAllTextSpy).toHaveBeenCalledWith('{{HORAS}}', '');
     expect(copyFileMock.setTrashed).toHaveBeenCalledWith(true);
   });
 
-  it('selects the slide with hours and removes the non-hours slide when person has hours', () => {
-    const headers = ['IDENTIFICADOR', 'NOMBRES COMPLETOS', 'APELLIDOS COMPLETOS', 'ROL QUE DESEMPEÑAS', 'AREA DE INTERES', 'ENVIAR CERTIFICADO', 'ESTADO GENERACION', 'URL DRIVE PDF'];
+  it('selects by template notes, ignores obsolete hours and removes other slides', () => {
+    const headers = ['IDENTIFICADOR', 'NOMBRES COMPLETOS', 'APELLIDOS COMPLETOS', 'ROL QUE DESEMPEÑAS', 'AREA DE INTERES', 'ENVIAR CERTIFICADO', 'ESTADO GENERACION', 'URL DRIVE PDF', 'TIPO DE PLANTILLA'];
     const rows = [
-      ['ORG-002', 'Carlos', 'Paredes', 'Líder', 'Logística', true, '', ''],
+      ['ORG-002', 'Carlos', 'Paredes', 'Líder', 'Logística', true, '', '', 'Organizador'],
     ];
     const sheet = {
       getLastRow: () => rows.length + 1,
@@ -601,11 +614,13 @@ describe('certificate Apps Script response', () => {
     const replaceAllTextSlideWithHours = vi.fn();
 
     const slideWithoutHours = {
+      getNotesPage: () => ({ getSpeakerNotesShape: () => ({ getText: () => ({ asString: () => 'rol: voluntario' }) }) }),
       getShapes: () => [{ getText: () => ({ asString: () => 'Texto general sin etiquetas' }) }],
       remove: removeSlideNoHours,
       replaceAllText: vi.fn(),
     };
     const slideWithHours = {
+      getNotesPage: () => ({ getSpeakerNotesShape: () => ({ getText: () => ({ asString: () => 'rol: organizador' }) }) }),
       getShapes: () => [{ getText: () => ({ asString: () => 'Certificado con {{HORAS}} incluidas' }) }],
       remove: removeSlideWithHours,
       replaceAllText: replaceAllTextSlideWithHours,
@@ -654,7 +669,7 @@ describe('certificate Apps Script response', () => {
         callback: 'cb',
         action: 'generateCertificates',
         population: 'organizers',
-        items: JSON.stringify([{ identifier: 'ORG-002', fullName: 'Carlos Paredes', hours: 80 }]),
+        items: JSON.stringify([{ identifier: 'ORG-002', fullName: 'Carlos Paredes', hours: 80, templateType: 'organizer' }]),
       },
     };
 
@@ -674,7 +689,7 @@ describe('certificate Apps Script response', () => {
     expect(removeSlideNoHours).toHaveBeenCalled();
     expect(removeSlideWithHours).not.toHaveBeenCalled();
     expect(replaceAllTextSlideWithHours).toHaveBeenCalledWith('{{NOMBRE_COMPLETO}}', 'Carlos Paredes');
-    expect(replaceAllTextSlideWithHours).toHaveBeenCalledWith('{{HORAS}}', '80 horas académicas');
+    expect(replaceAllTextSlideWithHours).toHaveBeenCalledWith('{{HORAS}}', '');
   });
 
   it('returns a distinct dni field for organizers read from the DNI column', () => {
